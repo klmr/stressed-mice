@@ -13,6 +13,10 @@ fastqc-files = $(addprefix data/qc/,$(notdir ${raw-files:.fastq.gz=_fastqc.html}
 
 directories = data data/qc
 
+rm_engine = crossmatch
+rm_threads = 32
+rm_memlimit = 64000
+
 #
 # QC
 #
