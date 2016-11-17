@@ -38,6 +38,8 @@ data/qc: data
 ${directories}:
 	mkdir '$@'
 
+.DELETE_ON_ERROR:
+
 .DEFAULT_GOAL := show-help
 # See <https://gist.github.com/klmr/575726c7e05d8780505a> for explanation.
 .PHONY: show-help
