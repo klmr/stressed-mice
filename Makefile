@@ -26,6 +26,7 @@ data/qc/%_fastqc.html: raw/%.fastq.gz | data/qc
 		"fastqc --outdir data/qc '$<'"
 	@rm ${@:%.html=%.zip}
 
+## Generate the quality control report
 data/qc/multiqc_report.html: ${fastqc-files}
 	multiqc --force --outdir data/qc $(sort $(dir $+))
 
