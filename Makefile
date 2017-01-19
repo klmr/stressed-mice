@@ -69,6 +69,10 @@ data/repeat-quant/%/quant.sf: raw/%.cutadapt.fastq.gz ${long-repeat-index} | dat
 	${bsub} -n8 -R'span[hosts=1]' -M12000 -R'select[mem>12000] rusage[mem=12000]' \
 		"${SHELL} -c 'salmon quant --index $(lastword $^) --libType U \
 		-r <(gunzip -c $<) -o ${@:%/quant.sf=%}'"
+
+data/repeat-quant/samples.tsv: ${repeat-quant}
+	./scripts/collect-samples $+ > '$@'
+
 #
 # Directories
 #
