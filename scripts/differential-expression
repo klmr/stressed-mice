@@ -1,0 +1,56 @@
+#!/usr/bin/env Rscript
+
+sys = modules::import('klmr/sys')
+
+plot_to_file = function (plot_expr, file, device = pdf) {
+    on.exit(dev.off())
+    device(file)
+    plot_expr
+}
+
+filename = function (template) {
+    file.path(args$prefix,
+              sprintf(template, paste(contrast[-1], collapse = '-vs-')))
+}
+
+sys$run({
+    args = sys$cmd$parse(opt('p', 'prefix', 'output path prefix'),
+                         arg('contrast', sprintf('contrast conditions separated by %s', dQuote('/'))),
+                         arg('samples', 'samples description table'))
+
+    deseq = modules::import_package('DESeq2')
+    tx = modules::import_package('tximport')
+    modules::import_package('dplyr', attach = TRUE)
+    tibble = modules::import_package('tibble')
+
+    samples = readr::read_tsv(args$samples)
+    tx2gene = readr::read_tsv(samples$File[1]) %>%
+        mutate(TXNAME = Name, GENEID = Name) %>%
+        distinct(TXNAME, GENEID)
+    txdata = tx$tximport(with(samples, setNames(File, Sample)),
+                         type = 'salmon', tx2gene = tx2gene)
+
+    dds = deseq$DESeqDataSetFromTximport(txdata, samples, ~Experiment)
+    # Filter globally unexpressed genes
+    dds = dds[rowSums(deseq$counts(dds)) != 0, ]
+    dds = deseq$DESeq(dds)
+
+    contrast = c('Experiment', strsplit(args$contrast, '/')[[1]])
+
+    results = deseq$results(dds, contrast = contrast)
+
+    plot_to_file(deseq$plotDispEsts(dds), filename('disp-ests-scatter-%s.pdf'))
+    plot_to_file(deseq$plotMA(results), filename('ma-scatter-%s.pdf'))
+
+    sorted_results = results %>%
+        as.data.frame() %>%
+        tibble$rownames_to_column('Gene') %>%
+        tibble$as_tibble() %>%
+        arrange(padj) %>%
+        filter(! is.na(padj)) %>%
+        select(Gene, log2FoldChange, padj)
+
+    readr::write_tsv(sorted_results, filename('genes-%s.tsv'))
+})
+
+# vim: ft=r
