@@ -13,11 +13,19 @@ fastqc-files = $(addprefix data/qc/,$(notdir ${raw-files:.fastq.gz=_fastqc.html}
 # Helper variables and definitions
 #
 
-directories = data data/qc
+directories = data data/qc data/index data/repeat-quant
 
 rm_engine = crossmatch
 rm_threads = 32
 rm_memlimit = 64000
+
+long-raw-files = $(shell ls raw/*long*.cutadapt.fastq.gz)
+
+repeat-reference = data/reference/Mus_musculus.GRCm38.75.repeats.fa
+short-repeat-index = data/index/Mus_musculus.GRCm38.75.repeats-short
+long-repeat-index = data/index/Mus_musculus.GRCm38.75.repeats-long
+
+repeat-quant = $(addprefix data/repeat-quant/,$(subst .cutadapt.fastq.gz,/quant.sf,$(notdir ${long-raw-files})))
 
 #
 # QC
@@ -33,10 +41,41 @@ data/qc/multiqc_report.html: ${fastqc-files}
 	multiqc --force --outdir data/qc $(sort $(dir $+))
 
 #
+# Expression quantification
+#
+
+.PHONY: repeat-indices
+## Generate Salmon indices for repeats
+repeat-indices: ${short-repeat-index} ${long-repeat-index}
+
+.PRECIOUS: ${short-repeat-index}
+${short-repeat-index}: ${repeat-reference} | data/index
+	${bsub} -n2 -M8000 -R'span[hosts=1] select[mem>8000] rusage[mem=8000]' \
+		"salmon index --type quasi --kmerLen 25 \
+		--transcripts '$<' --index '$@'"
+
+.PRECIOUS: ${long-repeat-index}
+${long-repeat-index}: ${repeat-reference} | data/index
+	${bsub} -n2 -M8000 -R'span[hosts=1] select[mem>8000] rusage[mem=8000]' \
+		"salmon index --type quasi --kmerLen 31 \
+		--transcripts '$<' --index '$@'"
+
+.PHONY: repeat-quant
+## Quantify repeat expression
+repeat-quant: ${repeat-quant}
+
+.PRECIOUS: ${repeat-quant}
+data/repeat-quant/%/quant.sf: raw/%.cutadapt.fastq.gz ${long-repeat-index} | data/repeat-quant
+	${bsub} -n8 -R'span[hosts=1]' -M12000 -R'select[mem>12000] rusage[mem=12000]' \
+		"${SHELL} -c 'salmon quant --index $(lastword $^) --libType U \
+		-r <(gunzip -c $<) -o ${@:%/quant.sf=%}'"
+#
 # Directories
 #
 
 data/qc: data
+data/index: data
+data/repeat-quant: data
 
 ${directories}:
 	mkdir '$@'
