@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+printf "File\tSample\tExperiment\tRun\n"
+
+for file in "$@"; do
+    sample="$(basename "$(dirname "$file")")"
+    experiment="${sample%%-*}"
+    run="$(perl -pe 's/.*?0+(\d+)$/\1/' <<< "$sample")"
+
+    printf "$file\t$sample\t$experiment\t$run\n"
+done
