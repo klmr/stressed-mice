@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
 
+library(methods)
+
 sys = modules::import('klmr/sys')
 
 plot_to_file = function (plot_expr, file, device = pdf) {
@@ -30,6 +32,7 @@ sys$run({
     txdata = tx$tximport(with(samples, setNames(File, Sample)),
                          type = 'salmon', tx2gene = tx2gene)
 
+    # needs `methods` …
     dds = deseq$DESeqDataSetFromTximport(txdata, samples, ~Experiment)
     # Filter globally unexpressed genes
     dds = dds[rowSums(deseq$counts(dds)) != 0, ]
