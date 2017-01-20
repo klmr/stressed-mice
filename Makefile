@@ -13,7 +13,7 @@ fastqc-files = $(addprefix data/qc/,$(notdir ${raw-files:.fastq.gz=_fastqc.html}
 # Helper variables and definitions
 #
 
-directories = data data/qc data/index data/repeat-quant
+directories = data/reference data/annotation data data/qc data/index data/repeat-quant
 
 rm_engine = crossmatch
 rm_threads = 32
@@ -21,11 +21,25 @@ rm_memlimit = 64000
 
 long-raw-files = $(shell ls raw/*long*.cutadapt.fastq.gz)
 
+genome-reference = data/reference/Mus_musculus.GRCm38.dna.primary_assembly.fa
 repeat-reference = data/reference/Mus_musculus.GRCm38.75.repeats.fa
+repeat-annotation = data/annotation/Mus_musculus.GRCm38.75.repeats.gtf
+flanking-repeat-reference = data/reference/Mus_musculus.GRCm38.75.repeats-flanking.fa
 short-repeat-index = data/index/Mus_musculus.GRCm38.75.repeats-short
 long-repeat-index = data/index/Mus_musculus.GRCm38.75.repeats-long
 
 repeat-quant = $(addprefix data/repeat-quant/,$(subst .cutadapt.fastq.gz,/quant.sf,$(notdir ${long-raw-files})))
+
+#
+# Annotation and reference
+#
+
+${genome-reference}: | data/reference
+	curl -o $@.gz 'ftp://ftp.ensembl.org/pub/release-79/fasta/mus_musculus/dna/Mus_musculus.GRCm38.dna.primary_assembly.fa.gz'
+	gunzip '$@.gz'
+
+${repeat-reference}: ${repeat-annotation} ${genome-reference}
+	./scripts/gtf-to-fasta '$<' '$(lastword $+)' '$@'
 
 #
 # QC
@@ -85,6 +99,8 @@ data/repeat-quant/genes-sperm-vs-zygote.tsv: data/repeat-quant/samples.tsv
 # Directories
 #
 
+data/reference: data
+data/annotation: data
 data/qc: data
 data/index: data
 data/repeat-quant: data
