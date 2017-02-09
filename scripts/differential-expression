@@ -30,10 +30,11 @@ sys$run({
         mutate(TXNAME = Name, GENEID = Name) %>%
         distinct(TXNAME, GENEID)
     txdata = tx$tximport(with(samples, setNames(File, Sample)),
-                         type = 'salmon', tx2gene = tx2gene)
+                         type = 'salmon', tx2gene = tx2gene,
+                         reader = readr::read_tsv)
 
     # needs `methods` …
-    dds = deseq$DESeqDataSetFromTximport(txdata, samples, ~Experiment)
+    dds = deseq$DESeqDataSetFromTximport(txdata, samples, ~Group)
     # Filter globally unexpressed genes
     dds = dds[rowSums(deseq$counts(dds)) != 0, ]
     dds = deseq$DESeq(dds)
