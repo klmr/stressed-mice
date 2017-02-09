@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-printf "File\tSample\tExperiment\tRun\n"
+printf "File\tSample\tExperiment\tIndex\n"
+
+sample_sheet="$1"
+shift
 
 for file in "$@"; do
     sample="$(basename "$(dirname "$file")")"

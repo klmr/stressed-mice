@@ -84,7 +84,7 @@ data/repeat-quant/%/quant.sf: raw/%.cutadapt.fastq.gz ${long-repeat-index} | dat
 		"${SHELL} -c 'salmon quant --index $(lastword $^) --libType U \
 		-r <(gunzip -c $<) -o ${@:%/quant.sf=%}'"
 
-data/repeat-quant/samples.tsv: ${repeat-quant}
+data/repeat-quant/samples.tsv: supporting/sample_id_KR.xlsx ${repeat-quant}
 	./scripts/collect-samples $+ > '$@'
 
 .PHONY: repeat-de
