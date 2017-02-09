@@ -1,14 +1,43 @@
 #!/usr/bin/env bash
 
-printf "File\tSample\tExperiment\tIndex\n"
-
 sample_sheet="$1"
 shift
 
-for file in "$@"; do
-    sample="$(basename "$(dirname "$file")")"
-    experiment="${sample%%-*}"
-    run="$(perl -pe 's/.*?0+(\d+)$/\1/' <<< "$sample")"
+cleanup() {
+    rm -f "$scriptfile" "$groupfile"
+}
 
-    printf "$file\t$sample\t$experiment\t$run\n"
-done
+scriptfile="$(mktemp)"
+
+cat > "$scriptfile" <<-"SCRIPT"
+	library(dplyr)
+	args = commandArgs(TRUE)
+	readxl::read_excel(args[1], 1) %>%
+	    select(`sample ID`, group) %>%
+	    filter(grepl('^KG5', `sample ID`)) %>%
+	    mutate(`sample ID` = sub('KG5\\.', '', `sample ID`)) %>%
+	    arrange(`sample ID`) %>%
+	    select(Group = group) %>%
+	    readr::write_tsv(args[2])
+	SCRIPT
+
+groupfile="$(mktemp)"
+
+trap cleanup EXIT
+
+Rscript "$scriptfile" "$sample_sheet" "$groupfile"
+
+(
+    printf "File\tSample\tExperiment\tIndex\n"
+
+    for file in "$@"; do
+        sample="$(basename "$(dirname "$file")")"
+        experiment="${sample%%-*}"
+        index="$(perl -pe 's/.*?0+(\d+)$/\1/' <<< "$sample")"
+
+        printf "$file\t$sample\t$experiment\t$index\n"
+    done \
+    | awk '$3 == "sperm" {print}' \
+    | sort -n -k 4,4
+) \
+| paste - "$groupfile"
