@@ -93,7 +93,7 @@ repeat-de: data/repeat-quant/genes-sperm-vs-zygote.tsv
 
 data/repeat-quant/genes-sperm-vs-zygote.tsv: data/repeat-quant/samples.tsv
 	${bsub} -M1000 -R'select[mem>1000] rusage[mem=1000]' \
-		"./scripts/differential-expression --prefix '$(dir $@)' sperm/zygote '$<'"
+		"./scripts/differential-expression --prefix '$(dir $@)' ms/co '$<'"
 
 #
 # Directories
