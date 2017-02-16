@@ -19,7 +19,7 @@ rm_engine = crossmatch
 rm_threads = 32
 rm_memlimit = 64000
 
-long-raw-files = $(shell ls raw/*long*.cutadapt.fastq.gz)
+long-raw-files = $(shell ls raw/*long*.cutadapt.fastq.gz) $(shell ls raw/GV?.cutadapt.fastq.gz)
 
 genome-reference = data/reference/Mus_musculus.GRCm38.dna.primary_assembly.fa
 repeat-reference = data/reference/Mus_musculus.GRCm38.75.repeats.fa
