@@ -60,19 +60,19 @@ data/qc/multiqc_report.html: ${small-fastqc-files}
 
 .PHONY: repeat-indices
 ## Generate Salmon indices for repeats
-repeat-indices: ${short-repeat-index} ${long-repeat-index}
+repeat-indices: ${short-repeat-index}/header.json ${long-repeat-index}/header.json
 
-.PRECIOUS: ${short-repeat-index}
-${short-repeat-index}: ${repeat-reference} | data/index
+.PRECIOUS: ${short-repeat-index}/header.json
+${short-repeat-index}/header.json: ${repeat-reference} | data/index
 	${bsub} -n2 -M8000 -R'span[hosts=1] select[mem>8000] rusage[mem=8000]' \
 		"salmon index --type quasi --kmerLen 25 \
 		--transcripts '$<' --index '$@'"
 
-.PRECIOUS: ${long-repeat-index}
-${long-repeat-index}: ${repeat-reference} | data/index
+.PRECIOUS: ${long-repeat-index}/header.json
+${long-repeat-index}/header.json: ${repeat-reference} | data/index
 	${bsub} -n2 -M8000 -R'span[hosts=1] select[mem>8000] rusage[mem=8000]' \
 		"salmon index --type quasi --kmerLen 31 \
-		--transcripts '$<' --index '$@'"
+		--transcripts '$<' --index '$(dir $@)'"
 
 .PHONY: repeat-quant
 ## Quantify repeat expression
