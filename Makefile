@@ -6,8 +6,8 @@ SHELL := $(shell which bash)
 
 bsub = scripts/bsub -K
 
-raw-files = $(shell ls raw/sperm-small-??.cutadapt.fastq.gz)
-fastqc-files = $(addprefix data/qc/,$(notdir ${raw-files:.fastq.gz=_fastqc.html}))
+small-raw-files = $(shell ls raw/sperm-small-??.cutadapt.fastq.gz)
+small-fastqc-files = $(addprefix data/qc/,$(notdir ${small-raw-files:.fastq.gz=_fastqc.html}))
 
 #
 # Helper variables and definitions
@@ -51,7 +51,7 @@ data/qc/%_fastqc.html: raw/%.fastq.gz | data/qc
 	@rm ${@:%.html=%.zip}
 
 ## Generate the quality control report
-data/qc/multiqc_report.html: ${fastqc-files}
+data/qc/multiqc_report.html: ${small-fastqc-files}
 	multiqc --force --outdir data/qc $(sort $(dir $+))
 
 #
