@@ -31,7 +31,7 @@ sys$run({
     tx2gene = readr::read_tsv(samples$File[1]) %>%
         mutate(TXNAME = Name, GENEID = Name) %>%
         distinct(TXNAME, GENEID)
-    txdata = tx$tximport(with(samples, setNames(File, Sample)),
+    txdata = tx$tximport(with(samples, setNames(File, ID)),
                          type = 'salmon', tx2gene = tx2gene,
                          reader = readr::read_tsv)
 
@@ -41,7 +41,7 @@ sys$run({
     dds = dds[rowSums(deseq$counts(dds)) != 0, ]
     dds = deseq$DESeq(dds)
 
-    contrast = c('Experiment', strsplit(args$contrast, '/')[[1]])
+    contrast = c('Group', strsplit(args$contrast, '/')[[1]])
 
     results = deseq$results(dds, contrast = contrast)
 
