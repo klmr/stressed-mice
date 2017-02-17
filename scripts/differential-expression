@@ -52,6 +52,8 @@ sys$run({
     ggplot2::theme_set(ggplot2::theme_minimal())
     plot_to_file(plots$plot_disp_ests(dds), filename('disp-ests-scatter-%s.pdf'), dev)
     plot_to_file(plots$plot_ma(results), filename('ma-scatter-%s.pdf'), dev)
+    plot_to_file(plots$plot_pca(dds, c('Group', 'Experimenter')),
+                 filename('pca-scatter-%s.pdf'), dev)
 
     sorted_results = results %>%
         as.data.frame() %>%
