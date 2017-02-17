@@ -19,7 +19,17 @@ rm_engine = crossmatch
 rm_threads = 32
 rm_memlimit = 64000
 
-long-raw-files = $(shell ls raw/*long*.cutadapt.fastq.gz) $(shell ls raw/GV?.cutadapt.fastq.gz)
+samples = $(shell tail -n+2 ./supporting/samples.tsv | tr $$'\t' '@')
+
+get-sample-field = $(word $2,$(subst @, ,$1))
+get-sample-file = $(call get-sample-field,$1,3)
+get-sample-id = $(call get-sample-field,$1,1)
+
+$(foreach i,${samples},$(eval sample_id_$(call get-sample-file,$i)=$(call get-sample-id,$i)))
+
+$(foreach i,${samples},$(eval sample_file_$(call get-sample-id,$i)=$(call get-sample-file,$i)))
+
+long-raw-files = $(foreach i,${samples},$(call get-sample-field,$i,3))
 
 genome-reference = data/reference/Mus_musculus.GRCm38.dna.primary_assembly.fa
 repeat-reference = data/reference/Mus_musculus.GRCm38.75.repeats.fa
@@ -28,7 +38,7 @@ flanking-repeat-reference = data/reference/Mus_musculus.GRCm38.75.repeats-flanki
 short-repeat-index = data/index/Mus_musculus.GRCm38.75.repeats-short
 long-repeat-index = data/index/Mus_musculus.GRCm38.75.repeats-long
 
-repeat-quant = $(addprefix data/repeat-quant/,$(subst .cutadapt.fastq.gz,/quant.sf,$(notdir ${long-raw-files})))
+repeat-quant = $(addprefix data/repeat-quant/,$(addsuffix /quant.sf,$(foreach i,${long-raw-files},${sample_id_$i})))
 
 #
 # Annotation and reference
@@ -78,8 +88,10 @@ ${long-repeat-index}/header.json: ${repeat-reference} | data/index
 ## Quantify repeat expression
 repeat-quant: ${repeat-quant}
 
+.SECONDEXPANSION:
+
 .PRECIOUS: ${repeat-quant}
-data/repeat-quant/%/quant.sf: raw/%.cutadapt.fastq.gz ${long-repeat-index} | data/repeat-quant
+data/repeat-quant/%/quant.sf: $${sample_file_$$*} ${long-repeat-index} | data/repeat-quant
 	${bsub} -n8 -R'span[hosts=1]' -M12000 -R'select[mem>12000] rusage[mem=12000]' \
 		"${SHELL} -c 'salmon quant --index $(lastword $^) --libType U \
 		-r <(gunzip -c $<) -o ${@:%/quant.sf=%}'"
