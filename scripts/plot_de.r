@@ -49,3 +49,17 @@ plot_ma = function (results) {
         scale_x_log10() +
         labs(x = 'Mean of normalised counts', y = expression(log[2]~FC))
 }
+
+plot_pca = function (dds, intgroup) {
+    vsd = DESeq2::varianceStabilizingTransformation(dds, blind = FALSE)
+    pca_data = BiocGenerics::plotPCA(vsd, intgroup = intgroup, returnData = TRUE)
+    var_exp = attr(pca_data, 'percentVar') * 100
+
+    ggplot(pca_data) +
+        aes(PC1, PC2) +
+        geom_point(aes_string(color = intgroup[1], shape = intgroup[2])) +
+        geom_text(aes(label = name), nudge_x = 1.5) +
+        coord_fixed() +
+        labs(x = sprintf('PC1 (%.2f%% variance explained)', var_exp[1]),
+             y = sprintf('PC1 (%.2f%% variance explained)', var_exp[2]))
+}
