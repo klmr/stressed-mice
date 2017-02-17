@@ -27,7 +27,8 @@ sys$run({
     modules::import_package('dplyr', attach = TRUE)
     tibble = modules::import_package('tibble')
 
-    samples = readr::read_tsv(args$samples)
+    samples = readr::read_tsv(args$samples) %>%
+        mutate(Experimenter = gsub('\\d+$', '', ID))
     tx2gene = readr::read_tsv(samples$File[1]) %>%
         mutate(TXNAME = Name, GENEID = Name) %>%
         distinct(TXNAME, GENEID)
@@ -36,7 +37,7 @@ sys$run({
                          reader = readr::read_tsv)
 
     # needs `methods` …
-    dds = deseq$DESeqDataSetFromTximport(txdata, samples, ~Group)
+    dds = deseq$DESeqDataSetFromTximport(txdata, samples, ~Group + Experimenter)
     # Filter globally unexpressed genes
     dds = dds[rowSums(deseq$counts(dds)) != 0, ]
     dds = deseq$DESeq(dds)
