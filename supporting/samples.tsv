@@ -1,0 +1,12 @@
+ID	Group	File
+KG1	ms	raw/sperm-long-01.cutadapt.fastq.gz
+KG2	ms	raw/sperm-long-02.cutadapt.fastq.gz
+KG3	ms	raw/sperm-long-03.cutadapt.fastq.gz
+KG4	ms	raw/sperm-long-04.cutadapt.fastq.gz
+KG6	co	raw/sperm-long-06.cutadapt.fastq.gz
+KG7	co	raw/sperm-long-07.cutadapt.fastq.gz
+GV1	co	raw/GV1.cutadapt.fastq.gz
+GV2	ms	raw/GV2.cutadapt.fastq.gz
+GV3	ms	raw/GV3.cutadapt.fastq.gz
+GV4	ms	raw/GV4.cutadapt.fastq.gz
+GV6	co	raw/GV6.cutadapt.fastq.gz
