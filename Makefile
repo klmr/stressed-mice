@@ -15,9 +15,8 @@ small-fastqc-files = $(addprefix data/qc/,$(notdir ${small-raw-files:.fastq.gz=_
 
 directories = data/reference data/annotation data data/qc data/index data/repeat-quant
 
-rm_engine = crossmatch
-rm_threads = 32
-rm_memlimit = 64000
+rm-threads = 32
+rm-mem = 24000
 
 samples = $(shell tail -n+2 ./supporting/samples.tsv | tr $$'\t' '@')
 
