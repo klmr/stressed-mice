@@ -45,7 +45,7 @@ repeat-quant = $(addprefix data/repeat-quant/,$(addsuffix /quant.sf,$(foreach i,
 #
 
 .PHONY: RepeatMasker
-## Build the RepeatMasker annotation
+## Mask/annotate repeats
 RepeatMasker: ${rm-repeat-annotation}
 
 ${rm-repeat-annotation}: ${genome-reference} | data/RepeatMasker
