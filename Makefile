@@ -13,7 +13,7 @@ small-fastqc-files = $(addprefix data/qc/,$(notdir ${small-raw-files:.fastq.gz=_
 # Helper variables and definitions
 #
 
-directories = data/reference data/annotation data data/qc data/index data/repeat-quant
+directories = data/reference data/annotation data/RepeatMasker data data/qc data/index data/repeat-quant
 
 rm-threads = 32
 rm-mem = 24000
@@ -33,6 +33,7 @@ long-raw-files = $(foreach i,${samples},$(call get-sample-field,$i,3))
 genome-reference = data/reference/Mus_musculus.GRCm38.dna.primary_assembly.fa
 repeat-reference = data/reference/Mus_musculus.GRCm38.75.repeats.fa
 repeat-annotation = data/annotation/Mus_musculus.GRCm38.75.repeats.gtf
+rm-repeat-annotation = data/RepeatMasker/$(notdir ${genome-reference}).out
 flanking-repeat-reference = data/reference/Mus_musculus.GRCm38.75.repeats-flanking.fa
 short-repeat-index = data/index/Mus_musculus.GRCm38.75.repeats-short
 long-repeat-index = data/index/Mus_musculus.GRCm38.75.repeats-long
@@ -42,6 +43,15 @@ repeat-quant = $(addprefix data/repeat-quant/,$(addsuffix /quant.sf,$(foreach i,
 #
 # Annotation and reference
 #
+
+.PHONY: RepeatMasker
+## Build the RepeatMasker annotation
+RepeatMasker: ${rm-repeat-annotation}
+
+${rm-repeat-annotation}: ${genome-reference} | data/RepeatMasker
+	${bsub} -n${rm-threads} -M${rm-mem} \
+		-R 'span[hosts=1] select[mem>${rm-mem}] rusage[mem=${rm-mem}]' \
+		RepeatMasker -pa ${rm-threads} -nolow -species mouse -dir ${@D} $<
 
 ${genome-reference}: | data/reference
 	curl -o $@.gz 'ftp://ftp.ensembl.org/pub/release-79/fasta/mus_musculus/dna/Mus_musculus.GRCm38.dna.primary_assembly.fa.gz'
@@ -112,6 +122,7 @@ data/repeat-quant/genes-sperm-vs-zygote.tsv: data/repeat-quant/samples.tsv
 
 data/reference: data
 data/annotation: data
+data/RepeatMasker: data
 data/qc: data
 data/index: data
 data/repeat-quant: data
