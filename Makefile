@@ -101,7 +101,7 @@ repeat-quant: ${repeat-quant}
 .SECONDEXPANSION:
 
 .PRECIOUS: ${repeat-quant}
-data/repeat-quant/%/quant.sf: $${sample_file_$$*} ${long-repeat-index} | data/repeat-quant
+data/repeat-quant/%/quant.sf: $${sample_file_$$*} ${long-repeat-index}/header.json | data/repeat-quant
 	${bsub} -n8 -R'span[hosts=1]' -M12000 -R'select[mem>12000] rusage[mem=12000]' \
 		"${SHELL} -c 'salmon quant --index $(lastword $^) --libType U \
 		-r <(gunzip -c $<) -o ${@:%/quant.sf=%}'"
