@@ -5,6 +5,7 @@ SHELL := $(shell which bash)
 #
 
 bsub = scripts/bsub -K
+memreq = -M$1 -R'select[mem>$1] rusage[mem=$1]'
 
 small-raw-files = $(shell ls raw/sperm-small-??.cutadapt.fastq.gz)
 small-fastqc-files = $(addprefix data/qc/,$(notdir ${small-raw-files:.fastq.gz=_fastqc.html}))
@@ -49,8 +50,7 @@ repeat-quant = $(addprefix data/repeat-quant/,$(addsuffix /quant.sf,$(foreach i,
 RepeatMasker: ${rm-repeat-annotation}
 
 ${rm-repeat-annotation}: ${genome-reference} | data/RepeatMasker
-	${bsub} -n${rm-threads} -M${rm-mem} \
-		-R 'span[hosts=1] select[mem>${rm-mem}] rusage[mem=${rm-mem}]' \
+	${bsub} -n${rm-threads} -R'span[hosts=1]' $(call memreq,${rm-mem}) \
 		"RepeatMasker -pa ${rm-threads} -nolow -species mouse -dir ${@D} $<"
 
 ${genome-reference}: | data/reference
@@ -58,16 +58,14 @@ ${genome-reference}: | data/reference
 	gunzip '$@.gz'
 
 ${repeat-reference}: ${repeat-annotation} ${genome-reference}
-	${bsub} -M4000 -R'select[mem>4000] rusage[mem=4000]' \
-		"./scripts/gtf-to-fasta '$<' '$(lastword $+)' '$@'"
+	${bsub} $(call memreq,4000) "./scripts/gtf-to-fasta '$<' '$(lastword $+)' '$@'"
 
 #
 # QC
 #
 
 data/qc/%_fastqc.html: raw/%.fastq.gz | data/qc
-	${bsub} -M4000 -R'select[mem>4000] rusage[mem=4000]' \
-		"fastqc --outdir data/qc '$<'"
+	${bsub} $(call memreq,4000) "fastqc --outdir data/qc '$<'"
 	@rm ${@:%.html=%.zip}
 
 ## Generate the quality control report
@@ -84,13 +82,13 @@ repeat-indices: ${short-repeat-index}/header.json ${long-repeat-index}/header.js
 
 .PRECIOUS: ${short-repeat-index}/header.json
 ${short-repeat-index}/header.json: ${repeat-reference} | data/index
-	${bsub} -n2 -M8000 -R'span[hosts=1] select[mem>8000] rusage[mem=8000]' \
+	${bsub} -n2 -R'span[hosts=1]' $(call memreq,64000) \
 		"salmon index --type quasi --kmerLen 25 \
 		--transcripts '$<' --index '$(dir $@)'"
 
 .PRECIOUS: ${long-repeat-index}/header.json
 ${long-repeat-index}/header.json: ${repeat-reference} | data/index
-	${bsub} -n2 -M64000 -R'span[hosts=1] select[mem>64000] rusage[mem=64000]' \
+	${bsub} -n2 -R'span[hosts=1]' $(call memreq,64000) \
 		"salmon index --type quasi --kmerLen 31 \
 		--transcripts '$<' --index '$(dir $@)'"
 
@@ -102,7 +100,7 @@ repeat-quant: ${repeat-quant}
 
 .PRECIOUS: ${repeat-quant}
 data/repeat-quant/%/quant.sf: $${sample_file_$$*} ${long-repeat-index}/header.json | data/repeat-quant
-	${bsub} -n8 -R'span[hosts=1]' -M12000 -R'select[mem>12000] rusage[mem=12000]' \
+	${bsub} -n8 -R'span[hosts=1]' $(call memreq,64000) \
 		"${SHELL} -c 'salmon quant --index $(dir $(lastword $^)) --libType U \
 		-r <(gunzip -c $<) -o ${@:%/quant.sf=%}'"
 
@@ -114,7 +112,7 @@ data/repeat-quant/samples.tsv: supporting/sample_id_KR.xlsx ${repeat-quant}
 repeat-de: data/repeat-quant/genes-sperm-vs-zygote.tsv
 
 data/repeat-quant/genes-sperm-vs-zygote.tsv: data/repeat-quant/samples.tsv
-	${bsub} -M1000 -R'select[mem>1000] rusage[mem=1000]' \
+	${bsub} $(call memreq,1000) \
 		"./scripts/differential-expression --prefix '$(dir $@)' ms/co '$<'"
 
 #
