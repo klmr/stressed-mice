@@ -86,7 +86,7 @@ repeat-indices: ${short-repeat-index}/header.json ${long-repeat-index}/header.js
 ${short-repeat-index}/header.json: ${repeat-reference} | data/index
 	${bsub} -n2 -M8000 -R'span[hosts=1] select[mem>8000] rusage[mem=8000]' \
 		"salmon index --type quasi --kmerLen 25 \
-		--transcripts '$<' --index '$@'"
+		--transcripts '$<' --index '$(dir $@)'"
 
 .PRECIOUS: ${long-repeat-index}/header.json
 ${long-repeat-index}/header.json: ${repeat-reference} | data/index
@@ -103,7 +103,7 @@ repeat-quant: ${repeat-quant}
 .PRECIOUS: ${repeat-quant}
 data/repeat-quant/%/quant.sf: $${sample_file_$$*} ${long-repeat-index}/header.json | data/repeat-quant
 	${bsub} -n8 -R'span[hosts=1]' -M12000 -R'select[mem>12000] rusage[mem=12000]' \
-		"${SHELL} -c 'salmon quant --index $(lastword $^) --libType U \
+		"${SHELL} -c 'salmon quant --index $(dir $(lastword $^)) --libType U \
 		-r <(gunzip -c $<) -o ${@:%/quant.sf=%}'"
 
 data/repeat-quant/samples.tsv: supporting/sample_id_KR.xlsx ${repeat-quant}
