@@ -9,9 +9,9 @@ output="$3"
 gff-rename() {
     < "$1" \
     awk -F $'\t' -vOFS=$'\t' '{
-        match($9, /Name="[^"]*"/)
+        match($9, /Name[= ]"[^"]*"/)
         feature_name = substr($9, RSTART + 6, RLENGTH - 7)
-        match($9, /Derives_from="[^"]*"/)
+        match($9, /Derives_from[= ]"[^"]*"/)
         feature_name = feature_name " " substr($9, RSTART, RLENGTH)
         print $1, $2, feature_name, $4, $5, $6, $7, $8, $9
     }'
