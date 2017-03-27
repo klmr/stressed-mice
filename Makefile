@@ -90,7 +90,7 @@ ${short-repeat-index}/header.json: ${repeat-reference} | data/index
 
 .PRECIOUS: ${long-repeat-index}/header.json
 ${long-repeat-index}/header.json: ${repeat-reference} | data/index
-	${bsub} -n2 -M8000 -R'span[hosts=1] select[mem>8000] rusage[mem=8000]' \
+	${bsub} -n2 -M64000 -R'span[hosts=1] select[mem>64000] rusage[mem=64000]' \
 		"salmon index --type quasi --kmerLen 31 \
 		--transcripts '$<' --index '$(dir $@)'"
 
