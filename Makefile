@@ -51,7 +51,7 @@ RepeatMasker: ${rm-repeat-annotation}
 ${rm-repeat-annotation}: ${genome-reference} | data/RepeatMasker
 	${bsub} -n${rm-threads} -M${rm-mem} \
 		-R 'span[hosts=1] select[mem>${rm-mem}] rusage[mem=${rm-mem}]' \
-		RepeatMasker -pa ${rm-threads} -nolow -species mouse -dir ${@D} $<
+		"RepeatMasker -pa ${rm-threads} -nolow -species mouse -dir ${@D} $<"
 
 ${genome-reference}: | data/reference
 	curl -o $@.gz 'ftp://ftp.ensembl.org/pub/release-79/fasta/mus_musculus/dna/Mus_musculus.GRCm38.dna.primary_assembly.fa.gz'
