@@ -111,8 +111,8 @@ data/repeat-quant/samples.tsv: supporting/sample_id_KR.xlsx ${repeat-quant}
 ## Perform differential expression analysis on the repeat elements
 repeat-de: data/repeat-quant/genes-sperm-vs-zygote.tsv
 
-data/repeat-quant/genes-sperm-vs-zygote.tsv: data/repeat-quant/samples.tsv
-	${bsub} $(call memreq,1000) \
+data/repeat-quant/genes-sperm-vs-zygote.tsv: data/repeat-quant/samples.tsv ${repeat-quant}
+	${bsub} $(call memreq,4000) \
 		"./scripts/differential-expression --prefix '$(dir $@)' ms/co '$<'"
 
 #
