@@ -58,7 +58,8 @@ ${genome-reference}: | data/reference
 	gunzip '$@.gz'
 
 ${repeat-reference}: ${repeat-annotation} ${genome-reference}
-	./scripts/gtf-to-fasta '$<' '$(lastword $+)' '$@'
+	${bsub} -M4000 -R'select[mem>4000] rusage[mem=4000]' \
+		"./scripts/gtf-to-fasta '$<' '$(lastword $+)' '$@'"
 
 #
 # QC
