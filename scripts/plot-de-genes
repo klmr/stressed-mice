@@ -1,0 +1,60 @@
+#load('data/repeat-quant/results.rdata')
+vst_expression = readr::read_tsv('data/repeat-quant/vsd-ms-vs-co.tsv')
+sorted_results = readr::read_tsv('data/repeat-quant/genes-ms-vs-co.tsv')
+samples = readr::read_tsv('data/repeat-quant/samples.tsv')
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+alpha = 0.05
+
+de_genes = vst_expression %>%
+    inner_join(sorted_results, by = 'Gene') %>%
+    filter(padj < alpha) %>%
+    gather(Sample, Expression, -Gene, -log2FoldChange, -padj) %>%
+    inner_join(samples, by = c(Sample = 'ID')) %>%
+    select(Gene, Group, Expression, log2FoldChange, padj) %>%
+    group_by(Gene, Group) %>%
+    mutate(Mean = mean(Expression)) %>%
+    ungroup() %>%
+    mutate(Gene = gsub('-', '­', Gene),
+           Gene = factor(Gene, unique(Gene)[order(unique(log2FoldChange))],
+                         ordered = TRUE))
+
+theme_set(theme_minimal())
+
+ggplot(de_genes) +
+    aes(Gene, Expression, fill = Group) +
+    geom_dotplot(binaxis = 'y', stackdir = 'center', dotsize = 0.5,
+                 color = 'white') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+gene_changes = de_genes %>%
+    group_by(Gene, Group) %>%
+    summarize(Mean = first(Mean), log2FoldChange = first(log2FoldChange)) %>%
+    spread(Group, Mean)
+
+log2_breaks = function (x) {
+    breaks = scales::log_breaks(base = 2)(x)
+    # Interpolate more point between even log breaks
+    sort(c(breaks, na.omit(rowMeans(cbind(breaks, lag(breaks))))))
+}
+
+ggplot(gene_changes) +
+    aes(x = Gene, xend = Gene, y = co, yend = ms, color = log2FoldChange) %>%
+    geom_segment(lwd = 0.8,
+                 arrow = arrow(length = unit(0.08, 'inches'), type = 'closed')) +
+    scale_y_continuous(breaks = log2_breaks, trans = scales::log2_trans()) +
+    scale_color_gradient2() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          panel.grid.minor = element_blank(),
+          panel.grid.major.x = element_blank()) +
+    labs(x = 'Repeat element', y = 'Expression (arb. unit)',
+         color = expression(paste(log[2], FC))) +
+    ggtitle('Significant gene expression changes',
+            'Direction of gene expression change (from control to treatment) is indicated by the arrow; magnitude is indicated by the size and colour of the arrow')
+
+ggsave('data/repeat-quant/changes.pdf')
+
+# vim: ft=r
