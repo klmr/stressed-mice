@@ -64,6 +64,11 @@ sys$run({
         select(Gene, log2FoldChange, padj)
 
     readr::write_tsv(sorted_results, filename('genes-%s.tsv'))
+
+    vst_expression = deseq$getVarianceStabilizedData(dds) %>%
+        as.data.frame() %>%
+        tibble$rownames_to_column('Gene')
+    readr::write_tsv(vst_expression, filename('vsd-%s.tsv'))
 })
 
 # vim: ft=r
