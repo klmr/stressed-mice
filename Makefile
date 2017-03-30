@@ -38,6 +38,7 @@ rm-repeat-annotation = data/RepeatMasker/$(notdir ${genome-reference}).out
 flanking-repeat-reference = data/reference/Mus_musculus.GRCm38.79.repeats-flanking.fa
 short-repeat-index = data/index/Mus_musculus.GRCm38.79.repeats-short
 long-repeat-index = data/index/Mus_musculus.GRCm38.79.repeats-long
+protein-coding-annotation = data/annotation/Mus_musculus.GRCm38.79.gtf
 
 repeat-quant = $(addprefix data/repeat-quant/,$(addsuffix /quant.sf,$(foreach i,${long-raw-files},${sample_id_$i})))
 
@@ -59,6 +60,10 @@ ${genome-reference}: | data/reference
 
 ${repeat-reference}: ${repeat-annotation} ${genome-reference}
 	${bsub} $(call memreq,4000) "./scripts/gtf-to-fasta '$<' '$(lastword $+)' '$@'"
+
+${protein-coding-annotation}: | data/annotation
+	curl -o $@.gz 'ftp://ftp.ensembl.org/pub/release-79/gtf/mus_musculus/Mus_musculus.GRCm38.79.gtf.gz'
+	gunzip '$@.gz'
 
 #
 # QC
