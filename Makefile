@@ -32,12 +32,12 @@ $(foreach i,${samples},$(eval sample_file_$(call get-sample-id,$i)=$(call get-sa
 long-raw-files = $(foreach i,${samples},$(call get-sample-field,$i,3))
 
 genome-reference = data/reference/Mus_musculus.GRCm38.dna.primary_assembly.fa
-repeat-reference = data/reference/Mus_musculus.GRCm38.75.repeats.fa
-repeat-annotation = data/annotation/Mus_musculus.GRCm38.75.repeats.gtf
+repeat-reference = data/reference/Mus_musculus.GRCm38.79.repeats.fa
+repeat-annotation = data/annotation/Mus_musculus.GRCm38.79.repeats.gtf
 rm-repeat-annotation = data/RepeatMasker/$(notdir ${genome-reference}).out
-flanking-repeat-reference = data/reference/Mus_musculus.GRCm38.75.repeats-flanking.fa
-short-repeat-index = data/index/Mus_musculus.GRCm38.75.repeats-short
-long-repeat-index = data/index/Mus_musculus.GRCm38.75.repeats-long
+flanking-repeat-reference = data/reference/Mus_musculus.GRCm38.79.repeats-flanking.fa
+short-repeat-index = data/index/Mus_musculus.GRCm38.79.repeats-short
+long-repeat-index = data/index/Mus_musculus.GRCm38.79.repeats-long
 
 repeat-quant = $(addprefix data/repeat-quant/,$(addsuffix /quant.sf,$(foreach i,${long-raw-files},${sample_id_$i})))
 
