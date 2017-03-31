@@ -1,0 +1,12 @@
+#!/usr/bin/env Rscript
+
+sys = modules::import('klmr/sys')
+
+sys$run({
+    args = list(te_list = 'data/repeat-quant/genes-ms-vs-co.tsv',
+                mode = 'background',
+                te_annotation = 'data/annotation/Mus_musculus.GRCm38.75.repeats.gtf',
+                sequences = 'data/reference/Mus_musculus.GRCm38.75.repeats.upstream.fasta')
+})
+
+# vim: ft=r
