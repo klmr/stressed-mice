@@ -112,6 +112,10 @@ data/repeat-quant/%/quant.sf: $${sample_file_$$*} ${long-repeat-index}/header.js
 data/repeat-quant/samples.tsv: supporting/sample_id_KR.xlsx ${repeat-quant}
 	./scripts/collect-samples $+ > '$@'
 
+#
+# Differential expression and downstream analysis
+#
+
 .PHONY: repeat-de
 ## Perform differential expression analysis on the repeat elements
 repeat-de: data/repeat-quant/genes-sperm-vs-zygote.tsv
