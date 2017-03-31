@@ -79,6 +79,7 @@ sys$run({
         theme(legend.position = 'bottom',
               text = element_text(family = 'RobotoCondensed'))
 
+    # FIXME: This belongs in its own module, of course.
     Roboto = Type1Font('Roboto',
                        c('/Users/konrad/.R/packages/extrafontdb/metrics/Roboto-Regular.afm.gz',
                          '/Users/konrad/.R/packages/extrafontdb/metrics/Roboto-Bold.afm.gz',
