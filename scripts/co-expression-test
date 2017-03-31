@@ -62,6 +62,8 @@ sys$run({
 
     ratios = bind_rows(data_frame(Ratio = de_te_ratio, TE = 'DE'),
                        data_frame(Ratio = non_de_te_ratio, TE = 'non­DE'))
+
+    ks.test(de_te_ratio, non_de_te_ratio)
 })
 
 # vim: ft=r
