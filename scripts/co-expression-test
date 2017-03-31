@@ -6,7 +6,8 @@ sys$run({
     args = list(te_list = 'data/repeat-quant/genes-ms-vs-co.tsv',
                 te_annotation = 'data/annotation/Mus_musculus.GRCm38.75.repeats.gtf',
                 p_annotation = 'data/annotation/Mus_musculus.GRCm38.79.gtf',
-                de_genes = 'raw/KG_GV_protein_DESeq2.txt')
+                de_genes = 'raw/KG_GV_protein_DESeq2.txt',
+                plot = 'data/repeat-quant/co-expressiom-ks-cdf.pdf')
 
     io = modules::import('ebi-predocs/ebits/io')
     modules::import_package('dplyr', attach = TRUE)
@@ -77,6 +78,9 @@ sys$run({
         scale_color_grey() +
         theme(legend.position = 'bottom',
               text = element_text(family = 'RobotoCondensed'))
+
+    pdf.options(encoding = 'ISOLatin2.enc')
+    ggsave(args$plot, p, width = 4, height = 3)
 
     ks.test(de_te_ratio, non_de_te_ratio)
 })
