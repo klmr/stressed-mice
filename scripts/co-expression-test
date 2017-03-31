@@ -52,13 +52,16 @@ sys$run({
     all_gene_ann = p_annotation[mcols(p_annotation)$gene_id %in% all_genes]
 
     # Count overlaps of TE promoters with DE genes, and with all genes. Then
-    # build a contingency table from that and perform Fisher test.
+    # perform a KS-test to test whether it’s distinct from background
+    # distribution of ratios.
 
-    all_adjacent_gene_counts = GenomicRanges::countOverlaps(te_annotation, p_annotation)
-    de_adjacent_gene_counts = GenomicRanges::countOverlaps(te_annotation, de_annotation)
-    adjacent_gene_counts = list(all = all_adjacent_gene_counts, de = de_adjacent_gene_counts)
-    saveRDS(adjacent_gene_counts, 'gene_counts.rds')
-    # FIXME: This is nonsense. Of course non-DE and DE differ …
+    overlaps = GenomicRanges::countOverlaps
+
+    de_te_ratio = overlaps(de_te_ann, de_gene_ann) / overlaps(de_te_ann, all_gene_ann)
+    non_de_te_ratio = overlaps(non_de_te_ann, de_gene_ann) / overlaps(non_de_te_ann, all_gene_ann)
+
+    ratios = bind_rows(data_frame(Ratio = de_te_ratio, TE = 'DE'),
+                       data_frame(Ratio = non_de_te_ratio, TE = 'non­DE'))
 })
 
 # vim: ft=r
