@@ -1,0 +1,53 @@
+#!/usr/bin/env Rscript
+
+sys = modules::import('klmr/sys')
+
+sys$run({
+    args = list(te_list = 'data/repeat-quant/genes-ms-vs-co.tsv',
+                te_annotation = 'data/annotation/Mus_musculus.GRCm38.75.repeats.gtf',
+                p_annotation = 'data/annotation/Mus_musculus.GRCm38.79.gtf',
+                de_genes = 'raw/KG_GV_protein_DESeq2.txt')
+
+    io = modules::import('ebi-predocs/ebits/io')
+    modules::import_package('dplyr', attach = TRUE)
+
+    mcols = GenomicRanges::mcols
+
+    te_list = readr::read_tsv(args$te_list)
+    te_annotation = rtracklayer::import(args$te_annotation)
+    te_annotation = te_annotation[mcols(te_annotation)$Name %in% unique(te_list$Gene)]
+    p_annotation = rtracklayer::import(args$p_annotation)
+    is_gene = mcols(p_annotation)$type == 'gene'
+    is_protein_coding = mcols(p_annotation)$gene_biotype == 'protein_coding'
+    chromosomes = GenomeInfoDb::seqlevels(p_annotation)
+    chromosomes = grep('^(\\d+|X|Y|M[Tt])$', chromosomes, value = TRUE)
+    is_real_chr = as.vector(GenomicRanges::seqnames(p_annotation)) %in% chromosomes
+    is_from_ensembl = grepl('ensembl', mcols(p_annotation)$source)
+    p_annotation = p_annotation[is_gene & is_protein_coding & is_real_chr & is_from_ensembl]
+
+    # Check for overlap of protein-coding annotation in the region adjacent to
+    # TEs. We choose 2kb around the promoter on both sides.
+
+    te_annotation = GenomicRanges::promoters(te_annotation, 2000, 2000)
+
+    # Filter protein-coding annotation for DE genes
+
+    alpha = 0.01
+
+    de_genes = io$read_table(args$de_genes) %>%
+        tibble::rownames_to_column('Gene') %>%
+        filter(padj < alpha)
+
+    de_annotation = p_annotation[mcols(p_annotation)$gene_id %in% de_genes$Gene]
+
+    # Count overlaps of TE promoters with DE genes, and with all genes. Then
+    # build a contingency table from that and perform Fisher test.
+
+    all_adjacent_gene_counts = GenomicRanges::countOverlaps(te_annotation, p_annotation)
+    de_adjacent_gene_counts = GenomicRanges::countOverlaps(te_annotation, de_annotation)
+    adjacent_gene_counts = list(all = all_adjacent_gene_counts, de = de_adjacent_gene_counts)
+    saveRDS(adjacent_gene_counts, 'gene_counts.rds')
+    # FIXME: This is nonsense. Of course non-DE and DE differ …
+})
+
+# vim: ft=r
