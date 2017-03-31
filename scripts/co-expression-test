@@ -79,6 +79,20 @@ sys$run({
         theme(legend.position = 'bottom',
               text = element_text(family = 'RobotoCondensed'))
 
+    Roboto = Type1Font('Roboto',
+                       c('/Users/konrad/.R/packages/extrafontdb/metrics/Roboto-Regular.afm.gz',
+                         '/Users/konrad/.R/packages/extrafontdb/metrics/Roboto-Bold.afm.gz',
+                         '/Users/konrad/.R/packages/extrafontdb/metrics/Roboto-Italic.afm.gz',
+                         '/Users/konrad/.R/packages/extrafontdb/metrics/Roboto-BoldItalic.afm.gz'))
+
+    RobotoCondensed = Type1Font('RobotoCondensed',
+                                c('/Users/konrad/.R/packages/extrafontdb/metrics/RobotoCondensed-Regular.afm.gz',
+                                  '/Users/konrad/.R/packages/extrafontdb/metrics/RobotoCondensed-Bold.afm.gz',
+                                  '/Users/konrad/.R/packages/extrafontdb/metrics/RobotoCondensed-Italic.afm.gz',
+                                  '/Users/konrad/.R/packages/extrafontdb/metrics/RobotoCondensed-BoldItalic.afm.gz'))
+
+    pdfFonts(Roboto = Roboto, RobotoCondensed = RobotoCondensed)
+
     pdf.options(encoding = 'ISOLatin2.enc')
     ggsave(args$plot, p, width = 4, height = 3)
 
