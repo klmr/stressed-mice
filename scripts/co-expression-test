@@ -35,11 +35,16 @@ sys$run({
 
     alpha = 0.01
 
-    de_genes = io$read_table(args$de_genes) %>%
-        tibble::rownames_to_column('Gene') %>%
-        filter(padj < alpha)
 
-    de_annotation = p_annotation[mcols(p_annotation)$gene_id %in% de_genes$Gene]
+
+    protein_coding_gene_list = io$read_table(args$de_genes) %>%
+        tibble::rownames_to_column('Gene')
+
+    all_genes = protein_coding_gene_list$Gene
+    de_genes = filter(protein_coding_gene_list, padj < alpha)$Gene
+
+    de_gene_ann = p_annotation[mcols(p_annotation)$gene_id %in% de_genes]
+    all_gene_ann = p_annotation[mcols(p_annotation)$gene_id %in% all_genes]
 
     # Count overlaps of TE promoters with DE genes, and with all genes. Then
     # build a contingency table from that and perform Fisher test.
