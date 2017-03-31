@@ -31,11 +31,16 @@ sys$run({
     windowsize = 100000
     te_annotation = GenomicRanges::promoters(te_annotation, windowsize, windowsize)
 
-    # Filter protein-coding annotation for DE genes
+    # Filter TEs and protein-coding annotation for DE genes
 
     alpha = 0.01
 
+    all_tes = te_list$Gene
+    de_tes = filter(te_list, padj < alpha, log2FoldChange > 0)$Gene
+    non_de_tes = setdiff(all_tes, de_tes)
 
+    de_te_ann = te_annotation[mcols(te_annotation)$Name %in% de_tes]
+    non_de_te_ann = te_annotation[mcols(te_annotation)$Name %in% non_de_tes]
 
     protein_coding_gene_list = io$read_table(args$de_genes) %>%
         tibble::rownames_to_column('Gene')
