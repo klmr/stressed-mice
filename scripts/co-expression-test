@@ -26,9 +26,10 @@ sys$run({
     p_annotation = p_annotation[is_gene & is_protein_coding & is_real_chr & is_from_ensembl]
 
     # Check for overlap of protein-coding annotation in the region adjacent to
-    # TEs. We choose 2kb around the promoter on both sides.
+    # TEs.
 
-    te_annotation = GenomicRanges::promoters(te_annotation, 2000, 2000)
+    windowsize = 100000
+    te_annotation = GenomicRanges::promoters(te_annotation, windowsize, windowsize)
 
     # Filter protein-coding annotation for DE genes
 
