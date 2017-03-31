@@ -63,6 +63,21 @@ sys$run({
     ratios = bind_rows(data_frame(Ratio = de_te_ratio, TE = 'DE'),
                        data_frame(Ratio = non_de_te_ratio, TE = 'non­DE'))
 
+    modules::import_package('ggplot2', attach = TRUE)
+    theme_set(theme_minimal())
+
+    p = ggplot(ratios) +
+        aes(x = Ratio, group = TE, color = TE) +
+        stat_ecdf(size = 1) +
+        ggtitle('K-S test of TE co­regulation') +
+        labs(x = sprintf('Ratio of DE/all protein­coding genes within %s kb',
+                         windowsize / 1000),
+             y = 'Cumulative density',
+             color = '') +
+        scale_color_grey() +
+        theme(legend.position = 'bottom',
+              text = element_text(family = 'RobotoCondensed'))
+
     ks.test(de_te_ratio, non_de_te_ratio)
 })
 
