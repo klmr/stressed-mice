@@ -1,0 +1,74 @@
+#!/usr/bin/env Rscript
+
+sys = modules::import('klmr/sys')
+
+sys$run({
+    args = list(genes = 'data/repeat-quant/genes-ms-vs-co.tsv',
+                faidx = 'data/reference/Mus_musculus.GRCm38.dna.primary_assembly.fa.fai',
+                annotation = 'data/annotation/Mus_musculus.GRCm38.75.repeats.gtf',
+                plot = 'data/repeat-quant/chromosome-clusters.pdf')
+
+    modules::import_package('dplyr', attach = TRUE)
+
+    mcols = GenomicRanges::mcols
+
+    genes = readr::read_tsv(args$genes)
+    annotation = rtracklayer::import(args$annotation)
+    annotation = annotation[mcols(annotation)$Name %in% unique(genes$Gene)]
+
+    alpha = 0.01
+    significant_genes = genes %>%
+        filter(padj < alpha) %>%
+        with(Gene) %>%
+        unique()
+
+    real_chr = function (chr) grepl('^(\\d+|X|Y|M[Tt])$', chr)
+
+    chr_order = function (chr) {
+        all_chr = c(1 : 19, 'X', 'Y', 'MT')
+        order = setNames(seq_along(all_chr), all_chr)
+        order[chr]
+    }
+
+    positions = data_frame(Chr = as.character(GenomeInfoDb::seqnames(annotation)),
+                           Position = IRanges::start(annotation),
+                           Significant = mcols(annotation)$Name %in% significant_genes) %>%
+        filter(real_chr(Chr)) %>%
+        mutate(Chr = reorder(factor(Chr), chr_order(Chr)))
+
+    chr_lengths = readr::read_tsv(args$faidx,
+                                  col_names = c('Chr', 'Length', 'a', 'b', 'c')) %>%
+        filter(real_chr(Chr)) %>%
+        mutate(Chr = reorder(factor(Chr), chr_order(Chr))) %>%
+        mutate(Position = Length) %>%
+        select(Chr, Position) %>%
+        bind_rows(data_frame(Chr = .$Chr, Position = 1))
+
+    modules::import('klmr/ggplots', attach = TRUE)
+
+    p = ggplot(positions) +
+        aes(Position) +
+        stat_bin(aes(fill = ..count..), bins = 200, geom = 'raster', y = 1,
+                 position = 'identity') +
+        geom_blank(data = chr_lengths) +
+        facet_grid(Chr  ~ ., scales = 'free_x', space = 'free_x', switch = 'y') +
+        theme(axis.text.y = element_blank(),
+              strip.text.y = element_text(angle = 180)) +
+        coord_cartesian(ylim = c(0, 1)) +
+        ylab('Chromosome') +
+        viridis::scale_fill_viridis() +
+        scale_x_continuous(labels = function (x) sprintf('%0.0f Mb', x / 1e6)) +
+        # FIXME: Extremely inefficient. Replace by summary statistic.
+        ggplot2::geom_point(data = filter(positions, Significant), color = 'red',
+                            size = 0.5, y = 0, alpha = 0.01) +
+        # geom_rug(data = filter(positions, Significant), stat = 'bin',
+        #          bins = 200, sides = 'b', col = 'red')
+        geom_rect(aes(xmin = Position + 1), xmax = chr_lengths[1, ]$Position + 2,
+                  ymin = -1, ymax = 2, data = filter(chr_lengths, Position != 1),
+                  fill = 'white')
+
+    ggsave(args$plot, p, height = length(unique(chr_lengths$Chr)) / 3)
+    ggsave(sub('\\.pdf$', '.png', args$plot), p, height = length(unique(chr_lengths$Chr)) / 3)
+})
+
+# vim: ft=r
