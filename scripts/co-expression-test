@@ -30,7 +30,6 @@ sys$run({
     # TEs.
 
     windowsize = 100000
-    te_annotation = GenomicRanges::promoters(te_annotation, windowsize, windowsize)
 
     # Filter TEs and protein-coding annotation for DE genes
 
@@ -55,23 +54,38 @@ sys$run({
     all_gene_ann = p_annotation[mcols(p_annotation)$gene_id %in% all_genes]
 
     # Count overlaps of TE promoters with DE genes, and with all genes. Then
-    # perform a KS-test to test whether it’s distinct from background
+    # perform a K–S test to test whether it’s distinct from background
     # distribution of ratios.
 
-    overlaps = GenomicRanges::countOverlaps
+    overlap_ratios = function (tes, genes_up, genes_total, windowsize) {
+        te_tads = GenomicRanges::promoters(tes, windowsize, windowsize)
+        de_counts = GenomicRanges::countOverlaps(te_tads, genes_up)
+        total_counts = GenomicRanges::countOverlaps(te_tads, genes_total)
+        Filter(Negate(is.nan), de_counts / total_counts)
+    }
 
-    de_te_ratio = overlaps(de_te_ann, de_gene_ann) / overlaps(de_te_ann, all_gene_ann)
-    non_de_te_ratio = overlaps(non_de_te_ann, de_gene_ann) / overlaps(non_de_te_ann, all_gene_ann)
+    model_summary = function (windowsize) {
+        foreground_ratios = overlap_ratios(de_te_ann, de_gene_ann, all_gene_ann, windowsize)
+        background_ratios = overlap_ratios(non_de_te_ann, de_gene_ann, all_gene_ann, windowsize)
 
-    ratios = bind_rows(data_frame(Ratio = de_te_ratio, TE = 'DE'),
-                       data_frame(Ratio = non_de_te_ratio, TE = 'non­DE'))
+        as_df = function (ecdf_f, type) {
+            env = environment(ecdf_f)
+            data_frame(Ratio = env$x, Prob = env$y, TE = type)
+        }
+
+        list(test = ks.test(foreground_ratios, background_ratios),
+             data = bind_rows(as_df(ecdf(foreground_ratios), 'DE'),
+                              as_df(ecdf(background_ratios), 'non­DE')))
+    }
 
     modules::import('klmr/ggplots', attach = TRUE)
 
-    p = ggplot(ratios) +
-        aes(x = Ratio, group = TE, color = TE) +
-        stat_ecdf(size = 1) +
-        ggtitle('K-S test of TE co­regulation') +
+    # FIXME: this isn’t quite the same as stat_ecdf, and it’s not good enough.
+    p = ggplot(model$data) +
+        aes(x = Ratio, y = Prob, color = TE) +
+        geom_step() +
+        scale_y_continuous(limits = c(0, 1)) +
+        ggtitle('K–S test of TE co­regulation') +
         labs(x = sprintf('Ratio of DE/all protein­coding genes within %s kb',
                          windowsize / 1000),
              y = 'Cumulative density',
@@ -83,7 +97,7 @@ sys$run({
 
     ggsave(args$plot, p, width = 4, height = 3)
 
-    ks.test(de_te_ratio, non_de_te_ratio)
+    model$test
 })
 
 # vim: ft=r
