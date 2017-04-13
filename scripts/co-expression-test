@@ -47,7 +47,9 @@ sys$run({
         tibble::rownames_to_column('Gene')
 
     all_genes = protein_coding_gene_list$Gene
-    de_genes = filter(protein_coding_gene_list, padj < alpha)$Gene
+    de_genes = protein_coding_gene_list %>%
+        filter(padj < alpha, log2FoldChange > 0) %>%
+        with(Gene)
 
     de_gene_ann = p_annotation[mcols(p_annotation)$gene_id %in% de_genes]
     all_gene_ann = p_annotation[mcols(p_annotation)$gene_id %in% all_genes]
