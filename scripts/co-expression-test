@@ -11,6 +11,7 @@ sys$run({
 
     io = modules::import('ebi-predocs/ebits/io')
     modules::import_package('dplyr', attach = TRUE)
+    modules::import('klmr/functional/lambda')
 
     mcols = GenomicRanges::mcols
 
@@ -25,11 +26,6 @@ sys$run({
     is_real_chr = as.vector(GenomicRanges::seqnames(p_annotation)) %in% chromosomes
     is_from_ensembl = grepl('ensembl', mcols(p_annotation)$source)
     p_annotation = p_annotation[is_gene & is_protein_coding & is_real_chr & is_from_ensembl]
-
-    # Check for overlap of protein-coding annotation in the region adjacent to
-    # TEs.
-
-    windowsize = 100000
 
     # Filter TEs and protein-coding annotation for DE genes
 
@@ -78,25 +74,39 @@ sys$run({
                               as_df(ecdf(background_ratios), 'non­DE')))
     }
 
+    # Check for overlap of protein-coding annotation in the region adjacent to
+    # TEs.
+
+    window_sizes = c(10000, 50000, 100000)
+
+    models = lapply(window_sizes, model_summary)
+
+    model_data = models %>%
+        lapply(x -> mutate(x$data, `Window size` = x$windowsize)) %>%
+        bind_rows()
+
+    model_evidence = models %>%
+        vapply(x -> x$test$p.value, numeric(1)) %>%
+        {data_frame(p = x$test$p.value, `Window size` = models$windowsize)}
+
     modules::import('klmr/ggplots', attach = TRUE)
 
     # FIXME: this isn’t quite the same as stat_ecdf, and it’s not good enough.
-    p = ggplot(model$data) +
+    p = ggplot(model_data) +
         aes(x = Ratio, y = Prob, color = TE) +
+        facet_wrap(~ `Window size`, nrow = 1,
+                   labeller = l -> list(sprintf('%0.0f bp', l[[1]]))) +
         geom_step() +
         scale_y_continuous(limits = c(0, 1)) +
         ggtitle('K–S test of TE co­regulation') +
-        labs(x = sprintf('Ratio of DE/all protein­coding genes within %s kb',
-                         windowsize / 1000),
+        labs(x = 'Ratio of DE/all protein­coding genes within a given window',
              y = 'Cumulative density',
              color = '') +
         scale_color_grey() +
         theme(legend.position = 'bottom',
               panel.grid.major = element_line())
 
-    ggsave(args$plot, p, width = 4, height = 3)
-
-    model$test
+    ggsave(args$plot, p, width = 5, height = 3)
 })
 
 # vim: ft=r
