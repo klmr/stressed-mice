@@ -69,7 +69,8 @@ sys$run({
             data_frame(Ratio = env$x, Prob = env$y, TE = type)
         }
 
-        list(test = ks.test(foreground_ratios, background_ratios),
+        list(windowsize = windowsize,
+             test = ks.test(foreground_ratios, background_ratios),
              data = bind_rows(as_df(ecdf(foreground_ratios), 'DE'),
                               as_df(ecdf(background_ratios), 'non­DE')))
     }
