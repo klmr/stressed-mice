@@ -115,7 +115,7 @@ sys$run({
         theme(legend.position = 'bottom',
               panel.grid.major = element_line())
 
-    ggsave(args$plot, p, width = 5, height = 3)
+    ggsave(args$plot, p, width = 6, height = 3)
 })
 
 # vim: ft=r
