@@ -82,9 +82,15 @@ sys$run({
 
     models = lapply(window_sizes, model_summary)
 
+    colnames = c('Ratio', 'Prob', 'TE', 'Window size')
     model_data = models %>%
         lapply(x -> mutate(x$data, `Window size` = x$windowsize)) %>%
-        bind_rows()
+        bind_rows() %>%
+        group_by(TE, `Window size`) %>%
+        # Add lower and upper ECDF boundaries.
+        do(do.call(add_row, c(list(.), setNames(list(0, 0, first(.$TE), first(.$`Window size`)), colnames),
+                              .before = 0))) %>%
+        do(do.call(add_row, c(list(.), setNames(list(1, 1, first(.$TE), first(.$`Window size`)), colnames))))
 
     model_evidence = models %>%
         vapply(x -> x$test$p.value, numeric(1)) %>%
