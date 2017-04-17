@@ -93,17 +93,19 @@ sys$run({
         do(do.call(add_row, c(list(.), setNames(list(1, 1, first(.$TE), first(.$`Window size`)), colnames))))
 
     model_evidence = models %>%
-        vapply(x -> x$test$p.value, numeric(1)) %>%
-        {data_frame(p = x$test$p.value, `Window size` = models$windowsize)}
+        {data_frame(p = vapply(., x -> x$test$p.value, numeric(1)),
+                    `Window size` = vapply(., `[[`, numeric(1), 'windowsize'))} %>%
+        mutate(x = 1, y = 0.1)
 
     modules::import('klmr/ggplots', attach = TRUE)
 
-    # FIXME: this isn’t quite the same as stat_ecdf, and it’s not good enough.
     p = ggplot(model_data) +
-        aes(x = Ratio, y = Prob, color = TE) +
+        aes(x = Ratio, y = Prob) +
         facet_wrap(~ `Window size`, nrow = 1,
                    labeller = l -> list(sprintf('%0.0f kb', l[[1]] / 1000))) +
-        geom_step() +
+        geom_step(aes(color = TE)) +
+        geom_text(aes(x, y, label = sprintf('italic(p) == %.2f', p)), size = 3,
+                  model_evidence, hjust = 1, color = '#666666', parse = TRUE) +
         scale_y_continuous(limits = c(0, 1)) +
         ggtitle('K–S test of TE co­regulation') +
         labs(x = 'Ratio of DE/all protein­coding genes within a given window',
