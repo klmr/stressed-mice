@@ -107,7 +107,7 @@ sys$run({
         geom_text(aes(x, y, label = sprintf('italic(p) == %.2f', p)), size = 3,
                   model_evidence, hjust = 1, color = '#666666', parse = TRUE) +
         scale_y_continuous(limits = c(0, 1)) +
-        ggtitle('K-S test of TE co­regulation') +
+        ggtitle('K–S test of TE co­regulation') +
         labs(x = 'Ratio of DE/all protein­coding genes within a given window',
              y = 'Cumulative density',
              color = '') +
@@ -115,7 +115,8 @@ sys$run({
         theme(legend.position = 'bottom',
               panel.grid.major = element_line())
 
-    ggsave(args$plot, p, width = 6, height = 3)
+    ggsave(args$plot, p + theme_publication, width = 5, height = 3)
+    fonts$embed(args$plot)
 })
 
 # vim: ft=r
