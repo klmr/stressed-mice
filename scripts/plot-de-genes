@@ -48,17 +48,19 @@ sys$run({
         sort(c(breaks, na.omit(rowMeans(cbind(breaks, lag(breaks))))))
     }
 
+    gene_change_labels = gene_changes %>%
+        with(sprintf('%s\n(%s)', Class, Gene))
+
     ggplot(gene_changes) +
-        aes(x = Gene, xend = Gene, y = co, yend = ms, color = log2FoldChange) %>%
+        aes(x = Gene, xend = Gene, y = co, yend = ms, color = Order, alpha = log2FoldChange) %>%
         geom_segment(lwd = 0.8,
                      arrow = arrow(length = unit(0.08, 'inches'), type = 'closed')) +
         scale_y_continuous(breaks = log2_breaks, trans = scales::log2_trans()) +
-        scale_color_gradient2() +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1),
-              panel.grid.minor = element_blank(),
-              panel.grid.major.x = element_blank()) +
+        scale_x_discrete(labels = gene_change_labels) +
+        scale_alpha(range = c(0.3, 1)) +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8)) +
         labs(x = 'Repeat element', y = 'Expression (arb. unit)',
-             color = expression(paste(log[2], FC))) +
+             alpha = expression(paste(log[2], FC))) +
         ggtitle('Significant gene expression changes',
                 'Direction of gene expression change (from control to treatment) is indicated by the arrow; magnitude is indicated by the size and colour of the arrow')
 
