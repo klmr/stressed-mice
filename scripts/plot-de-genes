@@ -64,7 +64,7 @@ sys$run({
         ggtitle('Significant gene expression changes',
                 'Direction of gene expression change (from control to treatment) is indicated by the arrow; magnitude is indicated by the size and colour of the arrow')
 
-        ggsave('data/repeat-quant/changes.pdf')
+        ggsave('data/repeat-quant/changes.pdf', width = 10, height = 5)
 })
 
 # vim: ft=r
