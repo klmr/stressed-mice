@@ -26,10 +26,21 @@ sys$run({
                Gene = factor(Gene, unique(Gene)[order(unique(log2FoldChange))],
                              ordered = TRUE))
 
+    annotation = rtracklayer::import('data/annotation/Mus_musculus.GRCm38.75.repeats.gtf') %>%
+        GenomicRanges::mcols %>%
+        as_data_frame() %>%
+        select(Name, Class = Derives_from) %>%
+        group_by(Name, Class) %>%
+        summarize()
+
     gene_changes = de_genes %>%
         group_by(Gene, Group) %>%
         summarize(Mean = first(Mean), log2FoldChange = first(log2FoldChange)) %>%
-        spread(Group, Mean)
+        spread(Group, Mean) %>%
+        inner_join(annotation, by = c(Gene = 'Name')) %>%
+        separate(Class, c('Order', 'Name'), '/', remove = FALSE) %>%
+        mutate(Name = sub('-.*', '', Name)) %>%
+        mutate(Gene = reorder(Gene, log2FoldChange))
 
     log2_breaks = function (x) {
         breaks = scales::log_breaks(base = 2)(x)
