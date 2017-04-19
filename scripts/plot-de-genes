@@ -7,9 +7,9 @@ sys$run({
     sorted_results = readr::read_tsv('data/repeat-quant/genes-ms-vs-co.tsv')
     samples = readr::read_tsv('data/repeat-quant/samples.tsv')
 
-    library(dplyr)
-    library(tidyr)
-    library(ggplot2)
+    modules::import_package('dplyr', attach = TRUE)
+    modules::import_package('tidyr', attach = TRUE)
+    modules::import('klmr/ggplots', attach = TRUE)
 
     alpha = 0.05
 
