@@ -26,13 +26,13 @@ sys$run({
                Gene = factor(Gene, unique(Gene)[order(unique(log2FoldChange))],
                              ordered = TRUE))
 
-        theme_set(theme_minimal())
+    theme_set(theme_minimal())
 
-        ggplot(de_genes) +
-            aes(Gene, Expression, fill = Group) +
-            geom_dotplot(binaxis = 'y', stackdir = 'center', dotsize = 0.5,
-                         color = 'white') +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    ggplot(de_genes) +
+        aes(Gene, Expression, fill = Group) +
+        geom_dotplot(binaxis = 'y', stackdir = 'center', dotsize = 0.5,
+                     color = 'white') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
     gene_changes = de_genes %>%
         group_by(Gene, Group) %>%
