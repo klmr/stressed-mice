@@ -38,6 +38,7 @@ sys$run({
         summarize(Mean = first(Mean), log2FoldChange = first(log2FoldChange)) %>%
         spread(Group, Mean) %>%
         inner_join(annotation, by = c(Gene = 'Name')) %>%
+        ungroup() %>%
         separate(Class, c('Order', 'Name'), '/', remove = FALSE) %>%
         mutate(Name = sub('-.*', '', Name)) %>%
         mutate(Gene = reorder(Gene, log2FoldChange))
@@ -64,8 +65,8 @@ sys$run({
         ggtitle('Significant gene expression changes',
                 'Direction of gene expression change (from control to treatment) is indicated by the arrow; magnitude is indicated by the size and colour of the arrow')
 
-        ggsave('data/repeat-quant/changes.pdf', width = 10, height = 5)
-        fonts$embed('data/repeat-quant/changes.pdf')
+        ggsave('data/repeat-quant/te-changes.pdf', width = 10, height = 5)
+        fonts$embed('data/repeat-quant/te-changes.pdf')
 })
 
 # vim: ft=r
