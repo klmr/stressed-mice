@@ -37,7 +37,7 @@ sys$run({
                          reader = readr::read_tsv)
 
     # needs `methods` …
-    dds = deseq$DESeqDataSetFromTximport(txdata, samples, ~Group + Experimenter)
+    dds = deseq$DESeqDataSetFromTximport(txdata, samples, ~ Group + Experimenter)
     # Filter globally unexpressed genes
     dds = dds[rowSums(deseq$counts(dds)) != 0, ]
     dds = deseq$DESeq(dds)
