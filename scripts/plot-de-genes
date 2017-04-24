@@ -63,7 +63,7 @@ sys$run({
         labs(x = 'Repeat element', y = 'Expression (arb. unit)',
              alpha = expression(paste(log[2], FC))) +
         ggtitle('Significant gene expression changes',
-                'Direction of gene expression change (from control to treatment) is indicated by the arrow; magnitude is indicated by the size and colour of the arrow')
+                'Direction of gene expression change (from control to treatment) is indicated by the arrow; magnitude is indicated by the size and opacity of the arrow')
 
         ggsave('data/repeat-quant/te-changes.pdf', width = 10, height = 5)
         fonts$embed('data/repeat-quant/te-changes.pdf')
