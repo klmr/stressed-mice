@@ -109,8 +109,8 @@ data/repeat-quant/%/quant.sf: $${sample_file_$$*} ${long-repeat-index}/header.js
 		"${SHELL} -c 'salmon quant --index $(dir $(lastword $^)) --libType U \
 		-r <(gunzip -c $<) -o ${@:%/quant.sf=%}'"
 
-data/repeat-quant/samples.tsv: supporting/sample_id_KR.xlsx ${repeat-quant}
-	./scripts/collect-samples $+ > '$@'
+data/repeat-quant/samples.tsv: ./supporting/samples.tsv
+	cut -f1-2 $< | paste - <(echo File; tr ' ' '\n' <<< '${repeat-quant}') > $@
 
 #
 # Differential expression and downstream analysis
