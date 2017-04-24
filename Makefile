@@ -88,13 +88,13 @@ repeat-indices: ${short-repeat-index}/header.json ${long-repeat-index}/header.js
 .PRECIOUS: ${short-repeat-index}/header.json
 ${short-repeat-index}/header.json: ${repeat-reference} | data/index
 	${bsub} -n2 -R'span[hosts=1]' $(call memreq,64000) \
-		"salmon index --type quasi --kmerLen 25 \
+		"salmon index --type quasi --kmerLen 25 --perfectHash \
 		--transcripts '$<' --index '$(dir $@)'"
 
 .PRECIOUS: ${long-repeat-index}/header.json
 ${long-repeat-index}/header.json: ${repeat-reference} | data/index
 	${bsub} -n2 -R'span[hosts=1]' $(call memreq,64000) \
-		"salmon index --type quasi --kmerLen 31 \
+		"salmon index --type quasi --kmerLen 31 --perfectHash \
 		--transcripts '$<' --index '$(dir $@)'"
 
 .PHONY: repeat-quant
