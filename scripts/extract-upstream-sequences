@@ -7,6 +7,14 @@ sys$run({
                 mode = 'background',
                 annotation = 'data/annotation/Mus_musculus.GRCm38.75.repeats.gtf',
                 output = 'data/reference/Mus_musculus.GRCm38.75.repeats.upstream.fasta')
+
+    modules::import_package('dplyr', attach = TRUE)
+
+    mcols = GenomicRanges::mcols
+
+    genes = readr::read_tsv(args$genes)
+    annotation = rtracklayer::import(args$annotation)
+    annotation = annotation[mcols(annotation)$Name %in% unique(genes$Gene)]
 })
 
 # vim: ft=r
