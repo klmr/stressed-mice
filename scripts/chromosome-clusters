@@ -46,6 +46,8 @@ sys$run({
 
     modules::import('klmr/ggplots', attach = TRUE)
 
+    theme_set(theme_publication)
+
     p = ggplot(positions) +
         aes(Position) +
         stat_bin(aes(fill = ..count..), bins = 200, geom = 'raster', y = 1,
@@ -68,7 +70,7 @@ sys$run({
                   fill = 'white')
 
     ggsave(args$plot, p, height = length(unique(chr_lengths$Chr)) / 3)
-    ggsave(sub('\\.pdf$', '.png', args$plot), p, height = length(unique(chr_lengths$Chr)) / 3)
+    fonts$embed(args$plot)
 })
 
 # vim: ft=r

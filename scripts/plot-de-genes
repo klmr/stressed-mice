@@ -11,6 +11,8 @@ sys$run({
     modules::import_package('tidyr', attach = TRUE)
     modules::import('klmr/ggplots', attach = TRUE)
 
+    theme_set(theme_publication)
+
     alpha = 0.05
 
     de_genes = vst_expression %>%
@@ -52,7 +54,7 @@ sys$run({
     gene_change_labels = gene_changes %>%
         with(sprintf('%s\n(%s)', Class, Gene))
 
-    ggplot(gene_changes) +
+    p = ggplot(gene_changes) +
         aes(x = Gene, xend = Gene, y = co, yend = ms, color = Order, alpha = log2FoldChange) %>%
         geom_segment(lwd = 0.8,
                      arrow = arrow(length = unit(0.08, 'inches'), type = 'closed')) +
@@ -65,8 +67,8 @@ sys$run({
         ggtitle('Significant gene expression changes',
                 'Direction of gene expression change (from control to treatment) is indicated by the arrow; magnitude is indicated by the size and opacity of the arrow')
 
-        ggsave('data/repeat-quant/te-changes.pdf', width = 10, height = 5)
-        fonts$embed('data/repeat-quant/te-changes.pdf')
+    ggsave('data/repeat-quant/te-changes.pdf', p, width = 10, height = 5)
+    fonts$embed('data/repeat-quant/te-changes.pdf')
 })
 
 # vim: ft=r

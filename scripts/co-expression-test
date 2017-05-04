@@ -99,6 +99,8 @@ sys$run({
 
     modules::import('klmr/ggplots', attach = TRUE)
 
+    theme_set(theme_publication)
+
     p = ggplot(model_data) +
         aes(x = Ratio, y = Prob) +
         facet_wrap(~ `Window size`, nrow = 1,
@@ -115,7 +117,7 @@ sys$run({
         theme(legend.position = 'bottom',
               panel.grid.major = element_line())
 
-    ggsave(args$plot, p + theme_publication, width = 5, height = 3)
+    ggsave(args$plot, p, width = 5, height = 3)
     fonts$embed(args$plot)
 })
 
