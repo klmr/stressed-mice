@@ -31,8 +31,8 @@ sys$run({
     annotation = rtracklayer::import('data/annotation/Mus_musculus.GRCm38.75.repeats.gtf') %>%
         GenomicRanges::mcols %>%
         as_data_frame() %>%
-        select(Name, Class = Derives_from) %>%
-        group_by(Name, Class) %>%
+        select(Name, `TE class` = Derives_from) %>%
+        group_by(Name, `TE class`) %>%
         summarize()
 
     gene_changes = de_genes %>%
@@ -41,8 +41,8 @@ sys$run({
         spread(Group, Mean) %>%
         inner_join(annotation, by = c(Gene = 'Name')) %>%
         ungroup() %>%
-        separate(Class, c('Order', 'Name'), '/', remove = FALSE) %>%
-        mutate(Name = sub('-.*', '', Name)) %>%
+        separate(`TE class`, c('TE order', 'TE name'), '/', remove = FALSE) %>%
+        mutate(`TE name` = sub('-.*', '', `TE name`)) %>%
         mutate(Gene = reorder(Gene, log2FoldChange))
 
     log2_breaks = function (x) {
@@ -52,20 +52,26 @@ sys$run({
     }
 
     gene_change_labels = gene_changes %>%
-        with(sprintf('%s\n(%s)', Class, Gene))
+        with(sprintf('%s\n(%s)', `TE class`, Gene))
+
+    long_gene_changes = gather(gene_changes, Experiment, y, one_of('co', 'ms'))
 
     p = ggplot(gene_changes) +
-        aes(x = Gene, xend = Gene, y = co, yend = ms, color = Order, alpha = log2FoldChange) %>%
-        geom_segment(lwd = 0.8,
-                     arrow = arrow(length = unit(0.08, 'inches'), type = 'closed')) +
-        scale_y_continuous(breaks = log2_breaks, trans = scales::log2_trans()) +
+        aes(x = Gene, color = log2FoldChange) +
+        geom_point(aes(y = y, shape = Experiment), size = 2,
+                   data = long_gene_changes, color = 'gray') +
+        geom_segment(aes(xend = Gene, y = co, yend = ms), lwd = 1) +
+        geom_tile(aes(fill = `TE order`, y = min(long_gene_changes$y) - 0.5),
+                  width = 0.9, height = 0.05, color = 'white') +
         scale_x_discrete(labels = gene_change_labels) +
-        scale_alpha(range = c(0.3, 1)) +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8)) +
-        labs(x = 'Repeat element', y = 'Expression (arb. unit)',
-             alpha = expression(paste(log[2], FC))) +
-        ggtitle('Significant gene expression changes',
-                'Direction of gene expression change (from control to treatment) is indicated by the arrow; magnitude is indicated by the size and opacity of the arrow')
+        scale_y_continuous(breaks = log2_breaks, trans = scales::log2_trans()) +
+        scale_color_continuous(limits = range(gene_changes$log2FoldChange)) +
+        scale_fill_grey(start = 0.1, end = 0.9) +
+        scale_shape_discrete(labels = c(ms = 'MSUS', co = 'Control')) +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+              panel.grid.major.x = element_blank()) +
+        labs(x = 'Transposable element', y = 'Expression (arb. unit)',
+             color = expression(paste(log[2], FC)))
 
     ggsave('data/repeat-quant/te-changes.pdf', p, width = 10, height = 5)
     fonts$embed('data/repeat-quant/te-changes.pdf')
