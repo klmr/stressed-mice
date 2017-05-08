@@ -71,7 +71,10 @@ sys$run({
         theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
               panel.grid.major.x = element_blank()) +
         labs(x = 'Transposable element', y = 'Expression (arb. unit)',
-             color = expression(paste(log[2], FC)))
+             color = expression(paste(log[2], FC))) +
+        guides(shape = guide_legend(order = 1),
+               color = guide_legend(order = 2),
+               fill = guide_legend(order = 3))
 
     ggsave('data/repeat-quant/te-changes.pdf', p, width = 10, height = 5)
     fonts$embed('data/repeat-quant/te-changes.pdf')
