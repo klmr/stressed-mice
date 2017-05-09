@@ -29,7 +29,7 @@ sys$run({
                              ordered = TRUE))
 
     annotation = rtracklayer::import('data/annotation/Mus_musculus.GRCm38.75.repeats.gtf') %>%
-        GenomicRanges::mcols %>%
+        GenomicRanges::mcols() %>%
         as_data_frame() %>%
         select(Name, `TE class` = Derives_from) %>%
         group_by(Name, `TE class`) %>%
