@@ -1,5 +1,5 @@
 modules::import_package('dplyr', attach = TRUE)
-modules::import('ggplots', attach = TRUE)
+modules::import('klmr/ggplots', attach = TRUE)
 
 plot_disp_ests = function (dds) {
     dispersion_data = S4Vectors::mcols(dds) %>%
