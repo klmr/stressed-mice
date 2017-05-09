@@ -7,9 +7,6 @@ SHELL := $(shell which bash)
 bsub = scripts/bsub -K
 memreq = -M$1 -R'select[mem>$1] rusage[mem=$1]'
 
-small-raw-files = $(shell ls raw/sperm-small-??.cutadapt.fastq.gz)
-small-fastqc-files = $(addprefix data/qc/,$(notdir ${small-raw-files:.fastq.gz=_fastqc.html}))
-
 #
 # Helper variables and definitions
 #
@@ -36,7 +33,6 @@ repeat-reference = data/reference/Mus_musculus.GRCm38.79.repeats.fa
 repeat-annotation = data/annotation/Mus_musculus.GRCm38.79.repeats.gtf
 rm-repeat-annotation = data/RepeatMasker/$(notdir ${genome-reference}).out
 flanking-repeat-reference = data/reference/Mus_musculus.GRCm38.79.repeats-flanking.fa
-short-repeat-index = data/index/Mus_musculus.GRCm38.79.repeats-short
 long-repeat-index = data/index/Mus_musculus.GRCm38.79.repeats-long
 protein-coding-annotation = data/annotation/Mus_musculus.GRCm38.79.gtf
 
@@ -73,23 +69,13 @@ data/qc/%_fastqc.html: raw/%.fastq.gz | data/qc
 	${bsub} $(call memreq,4000) "fastqc --outdir data/qc '$<'"
 	@rm ${@:%.html=%.zip}
 
-## Generate the quality control report
-data/qc/multiqc_report.html: ${small-fastqc-files}
-	multiqc --force --outdir data/qc $(sort $(dir $+))
-
 #
 # Expression quantification
 #
 
 .PHONY: repeat-indices
 ## Generate Salmon indices for repeats
-repeat-indices: ${short-repeat-index}/header.json ${long-repeat-index}/header.json
-
-.PRECIOUS: ${short-repeat-index}/header.json
-${short-repeat-index}/header.json: ${repeat-reference} | data/index
-	${bsub} -n2 -R'span[hosts=1]' $(call memreq,64000) \
-		"salmon index --type quasi --kmerLen 25 --perfectHash \
-		--transcripts '$<' --index '$(dir $@)'"
+repeat-indices: ${long-repeat-index}/header.json
 
 .PRECIOUS: ${long-repeat-index}/header.json
 ${long-repeat-index}/header.json: ${repeat-reference} | data/index
