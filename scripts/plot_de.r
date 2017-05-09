@@ -1,5 +1,5 @@
 modules::import_package('dplyr', attach = TRUE)
-modules::import_package('ggplot2', attach = TRUE)
+modules::import('ggplots', attach = TRUE)
 
 plot_disp_ests = function (dds) {
     dispersion_data = S4Vectors::mcols(dds) %>%
@@ -44,10 +44,14 @@ plot_ma = function (results) {
         geom_point() +
         geom_segment(aes(x, xend = xend, yend = log2FoldChange),
                      data.frame(x = 0, xend = Inf, log2FoldChange = 0), color = 'red') +
-        scale_color_manual(values = c('black', 'red')) +
+        scale_color_manual(values = c('black', 'red'),
+                           guide = guide_legend(title = NULL),
+                           breaks = TRUE,
+                           labels = 'differentially\nexpressed') +
         scale_shape_manual(values = c(low = 6, high = 2, normal = 16), guide = FALSE) +
         scale_x_log10() +
-        labs(x = 'Mean of normalised counts', y = expression(log[2]~FC))
+        labs(x = 'Mean of normalised counts', y = expression(log[2]~FC)) +
+        theme(legend.position = 'bottom')
 }
 
 plot_pca = function (dds, intgroup) {
