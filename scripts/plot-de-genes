@@ -3,9 +3,15 @@
 sys = modules::import('klmr/sys')
 
 sys$run({
-    vst_expression = readr::read_tsv('data/repeat-quant/vsd-ms-vs-co.tsv')
-    sorted_results = readr::read_tsv('data/repeat-quant/genes-ms-vs-co.tsv')
-    samples = readr::read_tsv('data/repeat-quant/samples.tsv')
+    args = sys$cmd$parse(opt('e', 'gene-expression', 'normalized gene counts'),
+                         opt('g', 'genes', 'the differential expression table'),
+                         opt('s', 'samples', 'the sample sheet'),
+                         opt('a', 'annotation', 'the TE annotation'),
+                         arg('outfile', 'path of the output PDF'))
+
+    vst_expression = readr::read_tsv(args$gene_expression)
+    sorted_results = readr::read_tsv(args$genes)
+    samples = readr::read_tsv(args$samples)
 
     modules::import_package('dplyr', attach = TRUE)
     modules::import_package('tidyr', attach = TRUE)
@@ -28,7 +34,7 @@ sys$run({
                Gene = factor(Gene, unique(Gene)[order(unique(log2FoldChange))],
                              ordered = TRUE))
 
-    annotation = rtracklayer::import('data/annotation/Mus_musculus.GRCm38.75.repeats.gtf') %>%
+    annotation = rtracklayer::import(args$annotation) %>%
         GenomicRanges::mcols() %>%
         as_data_frame() %>%
         select(Name, `TE class` = Derives_from) %>%
@@ -76,8 +82,8 @@ sys$run({
                color = guide_colorbar(order = 2),
                fill = guide_legend(order = 3))
 
-    ggsave('data/repeat-quant/te-changes.pdf', p, width = 10, height = 5)
-    fonts$embed('data/repeat-quant/te-changes.pdf')
+    ggsave(args$outfile, p, width = 10, height = 5)
+    fonts$embed(args$outfile)
 })
 
 # vim: ft=r
