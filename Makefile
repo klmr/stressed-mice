@@ -95,7 +95,7 @@ data/repeat-quant/%/quant.sf: $${sample_file_$$*} ${long-repeat-index}/header.js
 		"${SHELL} -c 'salmon quant --index $(dir $(lastword $^)) --libType U \
 		-r <(gunzip -c $<) -o ${@:%/quant.sf=%}'"
 
-data/repeat-quant/samples.tsv: ./supporting/samples.tsv
+data/repeat-quant/samples.tsv: ./supporting/samples.tsv | data/repeat-quant
 	cut -f1-2 $< | paste - <(echo File; tr ' ' '\n' <<< '${repeat-quant}') > $@
 
 #
