@@ -11,8 +11,6 @@ memreq = -M$1 -R'select[mem>$1] rusage[mem=$1]'
 # Helper variables and definitions
 #
 
-directories = data/reference data/annotation data/RepeatMasker data data/qc data/index data/repeat-quant
-
 rm-threads = 32
 rm-mem = 24000
 
@@ -116,15 +114,13 @@ ${de-repeat-genes}: data/repeat-quant/samples.tsv ${repeat-quant}
 # Directories
 #
 
-data/reference: data
-data/annotation: data
-data/RepeatMasker: data
-data/qc: data
-data/index: data
-data/repeat-quant: data
+directories = data data/reference data/annotation data/RepeatMasker data/qc data/index data/repeat-quant
 
-${directories}:
-	mkdir '$@'
+${directories}: | $$(dir $$@)
+	mkdir $@
+
+./:
+	@# Nothing to be done.
 
 .DELETE_ON_ERROR:
 
