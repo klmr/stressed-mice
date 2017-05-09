@@ -110,6 +110,15 @@ ${de-repeat-genes}: data/repeat-quant/samples.tsv ${repeat-quant}
 	${bsub} $(call memreq,4000) \
 		"./scripts/differential-expression --prefix '$(dir $@)' ms/co '$<'"
 
+data/repeat-quant/te-changes.pdf: ${de-repeat-genes}
+	${bsub} $(call memreq,4000) \
+		"./scripts/plot-de-genes \
+		--gene-expression $(subst genes-,vsd-,$<) \
+		--genes $< \
+		--samples data/repeat-quant/samples.tsv \
+		--annotation ${repeat-annotation} \
+		$@"
+
 #
 # Directories
 #
