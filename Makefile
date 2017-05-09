@@ -77,7 +77,7 @@ repeat-indices: ${long-repeat-index}/header.json
 
 .PRECIOUS: ${long-repeat-index}/header.json
 ${long-repeat-index}/header.json: ${repeat-reference} | data/index
-	${bsub} -n2 -R'span[hosts=1]' $(call memreq,64000) \
+	${bsub} -n2 -R'span[hosts=1]' $(call memreq,24000) \
 		"salmon index --type quasi --kmerLen 31 --perfectHash \
 		--transcripts '$<' --index '$(dir $@)'"
 
