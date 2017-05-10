@@ -108,7 +108,7 @@ repeat-de: ${de-repeat-genes}
 
 ${de-repeat-genes}: data/repeat-quant/samples.tsv ${repeat-quant}
 	${bsub} $(call memreq,4000) \
-		"./scripts/differential-expression --prefix '$(dir $@)' ms/co '$<'"
+		"./scripts/differential-expression --prefix '$(dir $@)' MSUS/Control '$<'"
 
 data/repeat-quant/te-changes.pdf: ${de-repeat-genes}
 	${bsub} $(call memreq,4000) \
