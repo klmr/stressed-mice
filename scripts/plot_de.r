@@ -47,7 +47,7 @@ plot_ma = function (results) {
         scale_color_manual(values = c('black', 'red'),
                            guide = guide_legend(title = NULL),
                            breaks = TRUE,
-                           labels = 'differentially\nexpressed') +
+                           labels = 'differentially expressed') +
         scale_shape_manual(values = c(low = 6, high = 2, normal = 16), guide = FALSE) +
         scale_x_log10() +
         labs(x = 'Mean of normalised counts', y = expression(log[2]~FC)) +
@@ -59,10 +59,12 @@ plot_pca = function (dds, intgroup) {
     pca_data = BiocGenerics::plotPCA(vsd, intgroup = intgroup, returnData = TRUE)
     var_exp = attr(pca_data, 'percentVar') * 100
 
+    modules::import_package('ggrepel', attach = TRUE)
+
     ggplot(pca_data) +
         aes(PC1, PC2) +
         geom_point(aes_string(color = intgroup[1], shape = intgroup[2])) +
-        geom_text(aes(label = name), nudge_x = 1.5) +
+        geom_text_repel(aes(label = name), segment.width = 0, segment.color = 'white') +
         coord_fixed() +
         labs(x = sprintf('PC1 (%.2f%% variance explained)', var_exp[1]),
              y = sprintf('PC1 (%.2f%% variance explained)', var_exp[2]))
