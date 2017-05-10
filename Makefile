@@ -100,7 +100,7 @@ data/repeat-quant/samples.tsv: ./supporting/samples.tsv | data/repeat-quant
 # Differential expression and downstream analysis
 #
 
-de-repeat-genes = data/repeat-quant/genes-ms-vs-co.tsv
+de-repeat-genes = data/repeat-quant/genes-MSUS-vs-Control.tsv
 
 .PHONY: repeat-de
 ## Perform differential expression analysis on the repeat elements
