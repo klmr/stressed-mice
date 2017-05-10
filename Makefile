@@ -111,6 +111,10 @@ ${de-repeat-genes}: data/repeat-quant/samples.tsv ${repeat-quant}
 	${bsub} $(call memreq,4000) \
 		"./scripts/differential-expression --prefix '$(dir $@)' MSUS/Control '$<'"
 
+.PHONY: te-changes
+## Plot the differential expression of transposable elements
+te-changes: data/repeat-quant/te-changes.pdf
+
 data/repeat-quant/te-changes.pdf: ${de-repeat-genes}
 	${bsub} $(call memreq,4000) \
 		"./scripts/plot-de-genes \
