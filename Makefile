@@ -124,7 +124,7 @@ data/repeat-quant/te-changes.pdf: ${de-repeat-genes}
 		--annotation ${repeat-annotation} \
 		$@"
 
-te-co-expression = data/repeat-quant/co-expression-MSUS-vs-Control-ks-ecdf.pdf
+te-co-expression = data/repeat-quant/co-expression-ks-ecdf-MSUS-vs-Control.pdf
 
 .PHONY: te-co-expression
 ## Test for coexpression of upregulated TEs with protein-coding genes and lncRNAs
