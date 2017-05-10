@@ -33,6 +33,7 @@ rm-repeat-annotation = data/RepeatMasker/$(notdir ${genome-reference}).out
 flanking-repeat-reference = data/reference/Mus_musculus.GRCm38.79.repeats-flanking.fa
 long-repeat-index = data/index/Mus_musculus.GRCm38.79.repeats-long
 protein-coding-annotation = data/annotation/Mus_musculus.GRCm38.79.gtf
+de-gene-list = raw/KG_GV_protein_lncRNA_DESeq2_name.txt
 
 repeat-quant = $(addprefix data/repeat-quant/,$(addsuffix /quant.sf,$(foreach i,${long-raw-files},${sample_id_$i})))
 
@@ -117,6 +118,21 @@ data/repeat-quant/te-changes.pdf: ${de-repeat-genes}
 		--genes $< \
 		--samples data/repeat-quant/samples.tsv \
 		--annotation ${repeat-annotation} \
+		$@"
+
+te-co-expression = data/repeat-quant/co-expression-MSUS-vs-Control-ks-ecdf.pdf
+
+.PHONY: te-co-expression
+## Test for coexpression of upregulated TEs with protein-coding genes and lncRNAs
+te-co-expression: ${te-co-expression}
+
+${te-co-expression}: ${de-repeat-genes} ${te-annotation} ${protein-coding-annotation}
+	${bsub} $(call memreq,8000) \
+		"./scripts/co-expression-test \
+		--te-list $< \
+		--te-annotation ${repeat-annotation} \
+		--de-genes ${de-gene-list} \
+		--p-annotation ${protein-coding-annotation} \
 		$@"
 
 #
