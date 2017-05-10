@@ -13,19 +13,16 @@ sys$run({
     modules::import_package('dplyr', attach = TRUE)
     modules::import('klmr/functional/lambda')
 
-    mcols = GenomicRanges::mcols
-
     te_list = readr::read_tsv(args$te_list)
     te_annotation = rtracklayer::import(args$te_annotation)
-    te_annotation = te_annotation[mcols(te_annotation)$Name %in% unique(te_list$Gene)]
+    te_annotation = te_annotation[te_annotation$Name %in% unique(te_list$Gene)]
     p_annotation = rtracklayer::import(args$p_annotation)
-    is_gene = mcols(p_annotation)$type == 'gene'
-    is_protein_coding = mcols(p_annotation)$gene_biotype == 'protein_coding'
+    is_gene = p_annotation$type == 'gene'
     chromosomes = GenomeInfoDb::seqlevels(p_annotation)
     chromosomes = grep('^(\\d+|X|Y|M[Tt])$', chromosomes, value = TRUE)
     is_real_chr = as.vector(GenomicRanges::seqnames(p_annotation)) %in% chromosomes
-    is_from_ensembl = grepl('ensembl', mcols(p_annotation)$source)
-    p_annotation = p_annotation[is_gene & is_protein_coding & is_real_chr & is_from_ensembl]
+    is_from_ensembl = grepl('ensembl', p_annotation$source)
+    p_annotation = p_annotation[is_gene & is_real_chr & is_from_ensembl]
 
     # Filter TEs and protein-coding annotation for DE genes
 
@@ -35,19 +32,19 @@ sys$run({
     de_tes = filter(te_list, padj < alpha, log2FoldChange > 0)$Gene
     non_de_tes = setdiff(all_tes, de_tes)
 
-    de_te_ann = te_annotation[mcols(te_annotation)$Name %in% de_tes]
-    non_de_te_ann = te_annotation[mcols(te_annotation)$Name %in% non_de_tes]
+    de_te_ann = te_annotation[te_annotation$Name %in% de_tes]
+    non_de_te_ann = te_annotation[te_annotation$Name %in% non_de_tes]
 
-    protein_coding_gene_list = io$read_table(args$de_genes) %>%
-        tibble::rownames_to_column('Gene')
+    protein_coding_gene_list = io$read_table(args$de_genes, header = TRUE) %>%
+        rename(Gene = id)
 
     all_genes = protein_coding_gene_list$Gene
     de_genes = protein_coding_gene_list %>%
         filter(padj < alpha, log2FoldChange > 0) %>%
         with(Gene)
 
-    de_gene_ann = p_annotation[mcols(p_annotation)$gene_id %in% de_genes]
-    all_gene_ann = p_annotation[mcols(p_annotation)$gene_id %in% all_genes]
+    de_gene_ann = p_annotation[p_annotation$gene_id %in% de_genes]
+    all_gene_ann = p_annotation[p_annotation$gene_id %in% all_genes]
 
     # Count overlaps of TE promoters with DE genes, and with all genes. Then
     # perform a K–S test to test whether it’s distinct from background
@@ -87,7 +84,7 @@ sys$run({
         lapply(x -> mutate(x$data, `Window size` = x$windowsize)) %>%
         bind_rows() %>%
         group_by(TE, `Window size`) %>%
-        # Add lower and upper ECDF boundaries.
+        # Add lower and upper ECDF boundaries, needed as plot limits.
         do(do.call(add_row, c(list(.), setNames(list(0, 0, first(.$TE), first(.$`Window size`)), colnames),
                               .before = 0))) %>%
         do(do.call(add_row, c(list(.), setNames(list(1, 1, first(.$TE), first(.$`Window size`)), colnames))))
