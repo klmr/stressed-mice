@@ -5,11 +5,17 @@ library(methods)
 sys = modules::import('klmr/sys')
 
 plot_to_file = function (plot_expr, file, device = pdf) {
-    on.exit(dev.off())
-    device(file)
-    plot_result = plot_expr
-    if (inherits(plot_result, 'ggplot'))
-        plot(plot_result)
+    local({
+        on.exit(dev.off())
+        device(file)
+        plot_result = plot_expr
+        if (inherits(plot_result, 'ggplot'))
+            plot(plot_result)
+    })
+    if (tools::file_ext(file) == 'pdf') {
+        gg = modules::import('klmr/ggplots')
+        gg$fonts$embed(file)
+    }
 }
 
 filename = function (template) {
