@@ -3,11 +3,11 @@
 sys = modules::import('klmr/sys')
 
 sys$run({
-    args = list(te_list = 'data/repeat-quant/genes-ms-vs-co.tsv',
-                te_annotation = 'data/annotation/Mus_musculus.GRCm38.75.repeats.gtf',
-                p_annotation = 'data/annotation/Mus_musculus.GRCm38.79.gtf',
-                de_genes = 'raw/KG_GV_protein_DESeq2.txt',
-                plot = 'data/repeat-quant/co-expressiom-ks-cdf.pdf')
+    args = sys$cmd$parse(opt('t', 'te-list', 'normalized TE gene counts'),
+                         opt('1', 'te-annotation', 'the TE annotation'),
+                         opt('d', 'de-genes', 'list of DE protein-coding and lncRNA genes'),
+                         opt('2', 'p-annotation', 'the protein-coding and lncRNA annotation'),
+                         arg('outfile', 'path of the output PDF'))
 
     io = modules::import('ebi-predocs/ebits/io')
     modules::import_package('dplyr', attach = TRUE)
@@ -117,8 +117,8 @@ sys$run({
         theme(legend.position = 'bottom',
               panel.grid.major = element_line())
 
-    ggsave(args$plot, p, width = 5, height = 3)
-    fonts$embed(args$plot)
+    ggsave(args$outfile, p, width = 5, height = 3)
+    fonts$embed(args$outfile)
 })
 
 # vim: ft=r
