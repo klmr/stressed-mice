@@ -2,12 +2,13 @@ library(methods)
 modules::import_package('dplyr', attach = TRUE)
 deseq = modules::import_package('DESeq2')
 tx = modules::import_package('tximport')
+tibble = modules::import_package('tibble')
 
 trna_locus_name = function (gene_id)
     sub('^Mus_musculus_tRNA-', '', gene_id)
 
 trna_gene_name = function (locus_name)
-    sub('-\\d+-\\d+$', '', locus_name)
+    sub('-\\d+$', '', locus_name)
 
 samples = readr::read_tsv('supporting/small-rna-samples.tsv',
                           col_names = c('Sample', 'Condition')) %>%
@@ -37,5 +38,16 @@ plots = modules::import('../../stressed-mice/scripts/plot_de')
 
 ggplot2::ggsave('data/trna-quant/trf-disp-est.pdf', plots$plot_disp_ests(dds))
 ggplot2::ggsave('data/trna-quant/trf-ma.pdf', plots$plot_ma(results))
+ggplot2::ggsave('data/trna-quant/trf-pca.pdf', plots$plot_pca(dds, 'Condition'))
+
+sorted_result = results %>%
+    as.data.frame() %>%
+    tibble$rownames_to_column('Gene') %>%
+    tibble$as_tibble() %>%
+    arrange(padj) %>%
+    filter(! is.na(padj)) %>%
+    select(Gene, baseMean, log2FoldChange, padj)
+
+readr::write_tsv(sorted_result, 'data/trna-quant/trf-de-results.tsv')
 
 # vim: ft=r
