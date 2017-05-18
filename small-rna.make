@@ -2,8 +2,7 @@ include bsub.make
 include help.make
 include dirs.make
 
-$(call directories,data data/fastq data/trna-quant)
-$(call directories,foo foo/bar)
+$(call dirs,data data/fastq data/trna-quant)
 
 small-rna-raw-files = $(shell ls raw/sperm-small-??.cutadapt.fastq.gz)
 trna-fastq = $(addprefix data/fastq/,$(notdir ${small-rna-raw-files:cutadapt.fastq.gz=trna.fastq.gz}))
