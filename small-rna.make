@@ -46,7 +46,7 @@ data/trna-quant/%: data/fastq/%.trna.fastq.gz ${trna-index}/header.json | data/t
 ## Quantify tRNA-derived fragments from all reads.
 trna-full-quant: ${trna-full-quant}
 data/trna-quant/full/%: data/fastq/cca/%.cca-trim.fastq.gz ${trna-index}/header.json | data/trna-quant/full
-	${bsub} $(call memreq,1000) \
+	${bsub} $(call memreq,2000) \
 		"bash -c 'salmon quant --index ${trna-index} --libType U -r <(gunzip -c $<) -o $@'"
 
 .DELETE_ON_ERROR:
