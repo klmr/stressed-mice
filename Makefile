@@ -1,5 +1,6 @@
 include bsub.make
 include help.make
+include dirs.make
 
 #
 # Helper variables and definitions
@@ -30,6 +31,8 @@ protein-coding-annotation = data/annotation/Mus_musculus.GRCm38.79.gtf
 de-gene-list = raw/KG_GV_protein_lncRNA_DESeq2_name.txt
 
 repeat-quant = $(addprefix data/repeat-quant/,$(addsuffix /quant.sf,$(foreach i,${long-raw-files},${sample_id_$i})))
+
+$(call dirs,data data/reference data/annotation data/RepeatMasker data/qc data/index data/repeat-quant)
 
 #
 # Annotation and reference
@@ -133,16 +136,5 @@ ${te-co-expression}: ${de-repeat-genes} ${te-annotation} ${protein-coding-annota
 		--p-annotation ${protein-coding-annotation} \
 		$@"
 
-#
-# Directories
-#
-
-directories = data data/reference data/annotation data/RepeatMasker data/qc data/index data/repeat-quant
-
-${directories}: | $$(dir $$@)
-	mkdir $@
-
-./:
-	@# Nothing to be done.
 
 .DELETE_ON_ERROR:
