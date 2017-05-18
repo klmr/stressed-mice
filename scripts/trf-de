@@ -10,9 +10,15 @@ trna_locus_name = function (gene_id)
 trna_gene_name = function (locus_name)
     sub('-\\d+$', '', locus_name)
 
+base_path = 'data/trna-quant'
+
+filename = function (template) {
+    file.path(base_path, template)
+}
+
 samples = readr::read_tsv('supporting/small-rna-samples.tsv',
                           col_names = c('Sample', 'Condition')) %>%
-    mutate(File = file.path('data', 'trna-quant', Sample, 'quant.sf'))
+    mutate(File = file.path(base_path, Sample, 'quant.sf'))
 
 read_sample_file = function (file, comment = '#') {
     readr::read_tsv(file, comment = comment) %>%
@@ -34,11 +40,12 @@ dds = dds[rowSums(deseq$counts(dds)) != 0, ]
 dds = deseq$DESeq(dds)
 results = deseq$results(dds)
 
+# FIXME: Make import generally accessible.
 plots = modules::import('../../stressed-mice/scripts/plot_de')
 
-ggplot2::ggsave('data/trna-quant/trf-disp-est.pdf', plots$plot_disp_ests(dds))
-ggplot2::ggsave('data/trna-quant/trf-ma.pdf', plots$plot_ma(results))
-ggplot2::ggsave('data/trna-quant/trf-pca.pdf', plots$plot_pca(dds, 'Condition'))
+ggplot2::ggsave(filename('trf-disp-est.pdf'), plots$plot_disp_ests(dds))
+ggplot2::ggsave(filename('trf-ma.pdf'), plots$plot_ma(results))
+ggplot2::ggsave(filename('trf-pca.pdf'), plots$plot_pca(dds, 'Condition'))
 
 sorted_result = results %>%
     as.data.frame() %>%
@@ -48,6 +55,6 @@ sorted_result = results %>%
     filter(! is.na(padj)) %>%
     select(Gene, baseMean, log2FoldChange, padj)
 
-readr::write_tsv(sorted_result, 'data/trna-quant/trf-de-results.tsv')
+readr::write_tsv(sorted_result, filename('trf-de-results.tsv'))
 
 # vim: ft=r
