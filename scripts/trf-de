@@ -43,11 +43,19 @@ dds = dds[rowSums(deseq$counts(dds)) != 0, ]
 dds = deseq$DESeq(dds)
 results = deseq$results(dds)
 
+gg = modules::import('klmr/ggplots')
 plots = modules::import('./plot_de')
 
-ggplot2::ggsave(filename('trf-disp-est.pdf'), plots$plot_disp_ests(dds))
-ggplot2::ggsave(filename('trf-ma.pdf'), plots$plot_ma(results))
-ggplot2::ggsave(filename('trf-pca.pdf'), plots$plot_pca(dds, 'Condition'))
+save_plot = function (filename, ...) {
+    filename = filename(filename)
+    gg$ggsave(filename, ...)
+    gg$fonts$embed(filename)
+}
+
+gg$theme_set(gg$theme_publication)
+save_plot('trf-disp-est.pdf', plots$plot_disp_ests(dds))
+save_plot('trf-ma.pdf', plots$plot_ma(results))
+save_plot('trf-pca.pdf', plots$plot_pca(dds, 'Condition'))
 
 sorted_result = results %>%
     as.data.frame() %>%
