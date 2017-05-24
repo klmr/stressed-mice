@@ -40,8 +40,7 @@ dds = dds[rowSums(deseq$counts(dds)) != 0, ]
 dds = deseq$DESeq(dds)
 results = deseq$results(dds)
 
-# FIXME: Make import generally accessible.
-plots = modules::import('../../stressed-mice/scripts/plot_de')
+plots = modules::import('./plot_de')
 
 ggplot2::ggsave(filename('trf-disp-est.pdf'), plots$plot_disp_ests(dds))
 ggplot2::ggsave(filename('trf-ma.pdf'), plots$plot_ma(results))
