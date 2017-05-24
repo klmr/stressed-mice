@@ -1,4 +1,7 @@
+#!/usr/bin/env Rscript
+
 library(methods)
+
 modules::import_package('dplyr', attach = TRUE)
 deseq = modules::import_package('DESeq2')
 tx = modules::import_package('tximport')
