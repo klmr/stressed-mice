@@ -1,0 +1,60 @@
+library(methods)
+modules::import_package('dplyr', attach = TRUE)
+deseq = modules::import_package('DESeq2')
+tx = modules::import_package('tximport')
+tibble = modules::import_package('tibble')
+
+trna_locus_name = function (gene_id)
+    sub('^Mus_musculus_tRNA-', '', gene_id)
+
+trna_gene_name = function (locus_name)
+    sub('-\\d+$', '', locus_name)
+
+base_path = 'data/trna-quant'
+
+filename = function (template) {
+    file.path(base_path, template)
+}
+
+samples = readr::read_tsv('supporting/small-rna-samples.tsv',
+                          col_names = c('Sample', 'Condition')) %>%
+    mutate(File = file.path(base_path, Sample, 'quant.sf'))
+
+read_sample_file = function (file, comment = '#') {
+    readr::read_tsv(file, comment = comment) %>%
+        mutate(Name = trna_locus_name(Name))
+}
+
+tx2gene = samples$File[1] %>%
+    read_sample_file() %>%
+    mutate(TXNAME = Name, GENEID = trna_gene_name(Name)) %>%
+    select(TXNAME, GENEID) %>%
+    distinct(TXNAME, GENEID)
+
+txdata = tx$tximport(with(samples, setNames(File, Sample)),
+                     type = 'salmon', tx2gene = tx2gene,
+                     reader = read_sample_file)
+
+dds = deseq$DESeqDataSetFromTximport(txdata, samples, ~ Condition)
+dds = dds[rowSums(deseq$counts(dds)) != 0, ]
+dds = deseq$DESeq(dds)
+results = deseq$results(dds)
+
+# FIXME: Make import generally accessible.
+plots = modules::import('../../stressed-mice/scripts/plot_de')
+
+ggplot2::ggsave(filename('trf-disp-est.pdf'), plots$plot_disp_ests(dds))
+ggplot2::ggsave(filename('trf-ma.pdf'), plots$plot_ma(results))
+ggplot2::ggsave(filename('trf-pca.pdf'), plots$plot_pca(dds, 'Condition'))
+
+sorted_result = results %>%
+    as.data.frame() %>%
+    tibble$rownames_to_column('Gene') %>%
+    tibble$as_tibble() %>%
+    arrange(padj) %>%
+    filter(! is.na(padj)) %>%
+    select(Gene, baseMean, log2FoldChange, padj)
+
+readr::write_tsv(sorted_result, filename('trf-de-results.tsv'))
+
+# vim: ft=r

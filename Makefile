@@ -1,11 +1,6 @@
-SHELL := $(shell which bash)
-
-#
-# Helpers
-#
-
-bsub = scripts/bsub -K
-memreq = -M$1 -R'select[mem>$1] rusage[mem=$1]'
+include bsub.make
+include help.make
+include dirs.make
 
 #
 # Helper variables and definitions
@@ -36,6 +31,8 @@ protein-coding-annotation = data/annotation/Mus_musculus.GRCm38.79.gtf
 de-gene-list = raw/KG_GV_protein_lncRNA_DESeq2_name.txt
 
 repeat-quant = $(addprefix data/repeat-quant/,$(addsuffix /quant.sf,$(foreach i,${long-raw-files},${sample_id_$i})))
+
+$(call dirs,data data/reference data/annotation data/RepeatMasker data/qc data/index data/repeat-quant)
 
 #
 # Annotation and reference
@@ -139,22 +136,5 @@ ${te-co-expression}: ${de-repeat-genes} ${te-annotation} ${protein-coding-annota
 		--p-annotation ${protein-coding-annotation} \
 		$@"
 
-#
-# Directories
-#
-
-directories = data data/reference data/annotation data/RepeatMasker data/qc data/index data/repeat-quant
-
-${directories}: | $$(dir $$@)
-	mkdir $@
-
-./:
-	@# Nothing to be done.
 
 .DELETE_ON_ERROR:
-
-.DEFAULT_GOAL := show-help
-# See <https://gist.github.com/klmr/575726c7e05d8780505a> for explanation.
-.PHONY: show-help
-show-help:
-	@echo "$$(tput bold)Available rules:$$(tput sgr0)";echo;sed -ne"/^## /{h;s/.*//;:d" -e"H;n;s/^## //;td" -e"s/:.*//;G;s/\\n## /---/;s/\\n/ /g;p;}" ${MAKEFILE_LIST}|LC_ALL='C' sort -f|awk -F --- -v n=$$(tput cols) -v i=19 -v a="$$(tput setaf 6)" -v z="$$(tput sgr0)" '{printf"%s%*s%s ",a,-i,$$1,z;m=split($$2,w," ");l=n-i;for(j=1;j<=m;j++){l-=length(w[j])+1;if(l<= 0){l=n-i-length(w[j])-1;printf"\n%*s ",-i," ";}printf"%s ",w[j];}printf"\n";}'|more $(shell test $(shell uname) == Darwin && echo '-Xr')
