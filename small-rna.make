@@ -42,6 +42,13 @@ data/trna-quant/%: data/fastq/%.trna.fastq.gz ${trna-index}/header.json | data/t
 	${bsub} $(call memreq,1000) \
 		"bash -c 'salmon quant --index ${trna-index} --libType U -r <(gunzip -c $<) -o $@'"
 
+.PHONY: trna-de
+## Perform DE analysis for tRNA-derived fragments.
+trna-de: data/trna-quant/trf-de-results.tsv
+
+data/trna-quant/trf-de-results.tsv: ${trna-quant}
+	./scripts/trf-de
+
 .PHONY: trna-full-quant
 ## Quantify tRNA-derived fragments from all reads.
 trna-full-quant: ${trna-full-quant}
