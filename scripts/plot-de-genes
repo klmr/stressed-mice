@@ -66,6 +66,14 @@ sys$run({
         mutate_at(vars(Gene, `TE class`), funs(reorder(., log2FoldChange))) %>%
         arrange(log2FoldChange)
 
+    assign_unit = function (unit, index, value) {
+        # grid::unit subset assignment is unfortunately messed up otherwise: it
+        # returns a `unit.list`, which ggplot2 doesn’t seem to support.
+        old_values = unclass(unit)
+        old_values[index] = value
+        unit(old_values, attr(unit, 'unit'))
+    }
+
     bar_chart = ggplot(gene_changes) +
         aes(Gene, 2 ** log2FoldChange, fill = `TE order`) +
         geom_bar(stat = 'identity') +
@@ -76,9 +84,10 @@ sys$run({
         theme(text = element_text(size = 6),
               axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
               legend.position = 'bottom',
-              legend.key.size = unit(6, 'pt'))
+              legend.key.size = unit(6, 'pt'),
+              plot.margin = assign_unit(theme_get()$plot.margin, c(2, 4), 0))
 
-    save_plot('bar-chart-', bar_chart, width = 10, height = 5.5, units = 'cm')
+    save_plot('bar-chart-', bar_chart, width = 11, height = 5.5, units = 'cm')
 
     log2_breaks = function (x) {
         breaks = scales::log_breaks(base = 2)(x)
