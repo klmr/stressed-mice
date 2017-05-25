@@ -54,8 +54,14 @@ save_plot = function (filename, ...) {
 
 gg$theme_set(gg$theme_publication)
 save_plot('trf-disp-est.pdf', plots$plot_disp_ests(dds))
-save_plot('trf-ma.pdf', plots$plot_ma(results))
 save_plot('trf-pca.pdf', plots$plot_pca(dds, 'Condition'))
+
+ma_plot = plots$plot_ma(results) +
+    gg$geom_hline(gg$aes(yintercept = y), data_frame(y = c(-1.5, 1.5)),
+                  color = 'cornflowerblue') +
+    gg$scale_y_continuous(limits = c(-2, 2))
+
+save_plot('trf-ma.pdf', ma_plot)
 
 sorted_result = results %>%
     as.data.frame() %>%
