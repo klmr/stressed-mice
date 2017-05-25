@@ -88,39 +88,6 @@ sys$run({
               plot.margin = assign_unit(theme_get()$plot.margin, c(2, 4), 0))
 
     save_plot('bar-chart-', bar_chart, width = 11, height = 5.5, units = 'cm')
-
-    log2_breaks = function (x) {
-        breaks = scales::log_breaks(base = 2)(x)
-        # Interpolate more point between even log breaks
-        sort(c(breaks, na.omit(rowMeans(cbind(breaks, lag(breaks))))))
-    }
-
-    gene_change_labels = gene_changes %>%
-        with(sprintf('%s\n(%s)', `TE class`, Gene))
-
-    long_gene_changes = gather(gene_changes, Experiment, y,
-                               one_of('MSUS', 'Control'))
-
-    p = ggplot(gene_changes) +
-        aes(x = Gene, color = log2FoldChange) +
-        geom_point(aes(y = y, shape = Experiment), size = 2,
-                   data = long_gene_changes, color = 'gray') +
-        geom_segment(aes(xend = Gene, y = Control, yend = MSUS), lwd = 1) +
-        geom_tile(aes(fill = `TE order`, y = min(long_gene_changes$y) - 0.5),
-                  width = 0.9, height = 0.05, color = 'white') +
-        scale_x_discrete(labels = gene_change_labels) +
-        scale_y_continuous(breaks = log2_breaks, trans = scales::log2_trans()) +
-        scale_color_continuous(limits = range(gene_changes$log2FoldChange)) +
-        scale_fill_grey(start = 0.1, end = 0.9) +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
-              panel.grid.major.x = element_blank()) +
-        labs(x = 'Transposable element', y = 'Expression (arb. unit)',
-             color = expression(paste(log[2], FC))) +
-        guides(shape = guide_legend(order = 1),
-               color = guide_colorbar(order = 2),
-               fill = guide_legend(order = 3))
-
-    save_plot('', p, width = 10, height = 5)
 })
 
 # vim: ft=r
