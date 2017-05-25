@@ -88,6 +88,14 @@ sys$run({
               plot.margin = assign_unit(theme_get()$plot.margin, c(2, 4), 0))
 
     save_plot('bar-chart-', bar_chart, width = 11, height = 5.5, units = 'cm')
+
+    # Save list with exact gene names and shortcuts
+
+    gene_changes %>%
+        mutate(Gene = gsub('­', '-', Gene),
+               `Short name` = unique_te_names(`TE name`)) %>%
+        select(`Short name`, Gene) %>%
+        readr::write_tsv(file.path(dirname(args$outfile), 'te-names.tsv'))
 })
 
 # vim: ft=r
