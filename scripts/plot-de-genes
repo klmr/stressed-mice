@@ -36,10 +36,7 @@ sys$run({
         select(Gene, Group, Expression, log2FoldChange, padj) %>%
         group_by(Gene, Group) %>%
         mutate(Mean = mean(Expression)) %>%
-        ungroup() %>%
-        mutate(Gene = gsub('-', '­', Gene),
-               Gene = factor(Gene, unique(Gene)[order(unique(log2FoldChange))],
-                             ordered = TRUE))
+        ungroup()
 
     annotation = rtracklayer::import(args$annotation) %>%
         GenomicRanges::mcols() %>%
@@ -47,6 +44,15 @@ sys$run({
         select(Name, `TE class` = Derives_from) %>%
         group_by(Name, `TE class`) %>%
         summarize()
+
+    unique_te_names = function (names) {
+        make.unique(names, sep = '\1') %>%
+            stringr::str_split_fixed('\1', 2) %>%
+            as.data.frame(stringsAsFactors = FALSE) %>%
+            mutate(V2 = letters[as.integer(V2)]) %>%
+            mutate(V2 = ifelse(is.na(V2), '', sprintf(' (%s)', V2))) %>%
+            with(paste0(V1, V2))
+    }
 
     gene_changes = de_genes %>%
         group_by(Gene, Group) %>%
@@ -56,61 +62,40 @@ sys$run({
         ungroup() %>%
         separate(`TE class`, c('TE order', 'TE name'), '/', remove = FALSE) %>%
         mutate(`TE name` = sub('-.*', '', `TE name`)) %>%
-        mutate(Gene = reorder(Gene, log2FoldChange))
+        mutate_at(vars(Gene, `TE class`), funs(gsub('-', '­', .))) %>%
+        mutate_at(vars(Gene, `TE class`), funs(reorder(., log2FoldChange))) %>%
+        arrange(log2FoldChange)
+
+    assign_unit = function (unit, index, value) {
+        # grid::unit subset assignment is unfortunately messed up otherwise: it
+        # returns a `unit.list`, which ggplot2 doesn’t seem to support.
+        old_values = unclass(unit)
+        old_values[index] = value
+        unit(old_values, attr(unit, 'unit'))
+    }
 
     bar_chart = ggplot(gene_changes) +
         aes(Gene, 2 ** log2FoldChange, fill = `TE order`) +
         geom_bar(stat = 'identity') +
         geom_hline(aes(yintercept = y), data = data_frame(y = 1)) +
-        scale_x_discrete(labels = gene_changes$`TE class`) +
+        scale_x_discrete(labels = unique_te_names(gene_changes$`TE name`)) +
         ylab('Fold change') +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
-              legend.position = 'bottom')
+        scale_y_continuous(expand = c(0, 0)) +
+        theme(text = element_text(size = 6),
+              axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+              legend.position = 'bottom',
+              legend.key.size = unit(6, 'pt'),
+              plot.margin = assign_unit(theme_get()$plot.margin, c(2, 4), 0))
 
-    save_plot('bar-chart-', bar_chart, width = 8, height = 5)
+    save_plot('bar-chart-', bar_chart, width = 11, height = 5.5, units = 'cm')
 
-    ma_scatter = gene_changes %>%
-        mutate(Mean = rowMeans(.[, c('Control', 'MSUS')])) %>%
-        ggplot() +
-        aes(Mean, log2FoldChange) +
-        geom_point(aes(color = `TE order`, shape = `TE order`), size = 2) +
-        ggrepel::geom_text_repel(aes(label = `TE class`), size = 2) +
-        labs(x = 'Mean expression (arb. unit)', y = 'Fold change')
+    # Save list with exact gene names and shortcuts
 
-    save_plot('ma-scatter-', ma_scatter, width = 5, height = 5)
-
-    log2_breaks = function (x) {
-        breaks = scales::log_breaks(base = 2)(x)
-        # Interpolate more point between even log breaks
-        sort(c(breaks, na.omit(rowMeans(cbind(breaks, lag(breaks))))))
-    }
-
-    gene_change_labels = gene_changes %>%
-        with(sprintf('%s\n(%s)', `TE class`, Gene))
-
-    long_gene_changes = gather(gene_changes, Experiment, y,
-                               one_of('MSUS', 'Control'))
-
-    p = ggplot(gene_changes) +
-        aes(x = Gene, color = log2FoldChange) +
-        geom_point(aes(y = y, shape = Experiment), size = 2,
-                   data = long_gene_changes, color = 'gray') +
-        geom_segment(aes(xend = Gene, y = Control, yend = MSUS), lwd = 1) +
-        geom_tile(aes(fill = `TE order`, y = min(long_gene_changes$y) - 0.5),
-                  width = 0.9, height = 0.05, color = 'white') +
-        scale_x_discrete(labels = gene_change_labels) +
-        scale_y_continuous(breaks = log2_breaks, trans = scales::log2_trans()) +
-        scale_color_continuous(limits = range(gene_changes$log2FoldChange)) +
-        scale_fill_grey(start = 0.1, end = 0.9) +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
-              panel.grid.major.x = element_blank()) +
-        labs(x = 'Transposable element', y = 'Expression (arb. unit)',
-             color = expression(paste(log[2], FC))) +
-        guides(shape = guide_legend(order = 1),
-               color = guide_colorbar(order = 2),
-               fill = guide_legend(order = 3))
-
-    save_plot('', p, width = 10, height = 5)
+    gene_changes %>%
+        mutate(Gene = gsub('­', '-', Gene),
+               `Short name` = unique_te_names(`TE name`)) %>%
+        select(`Short name`, Gene) %>%
+        readr::write_tsv(file.path(dirname(args$outfile), 'te-names.tsv'))
 })
 
 # vim: ft=r
