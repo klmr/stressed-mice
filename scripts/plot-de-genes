@@ -36,10 +36,7 @@ sys$run({
         select(Gene, Group, Expression, log2FoldChange, padj) %>%
         group_by(Gene, Group) %>%
         mutate(Mean = mean(Expression)) %>%
-        ungroup() %>%
-        mutate(Gene = gsub('-', '­', Gene),
-               Gene = factor(Gene, unique(Gene)[order(unique(log2FoldChange))],
-                             ordered = TRUE))
+        ungroup()
 
     annotation = rtracklayer::import(args$annotation) %>%
         GenomicRanges::mcols() %>%
